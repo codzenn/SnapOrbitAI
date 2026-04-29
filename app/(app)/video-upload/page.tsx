@@ -1,10 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { filesize } from "filesize";
+import { useUser } from "@clerk/nextjs";
+import Link from "next/link";
+import {
+  CircleAlert,
+  CloudUpload,
+  FileVideo,
+  Sparkles,
+  WandSparkles,
+  Crown,
+  Loader2
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 const VideoUpload = () => {
+  const { user, isLoaded } = useUser();
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
@@ -12,12 +30,25 @@ const VideoUpload = () => {
   const [error, setError] = useState<string>("");
 
   const router = useRouter();
-  // max file size of 50MB
+  const plan = user?.publicMetadata?.plan as string;
+  const isStarter = !plan || plan === "free";
+  const isPro = plan === "pro" || plan === "pro_plus";
+
   const MAX_FILE_SIZE = 50 * 1024 * 1024;
+  const canSubmit = Boolean(file && title.trim() && !isUploading);
+  
+  const uploadSummary = useMemo(() => {
+    if (!file) return null;
+    return {
+      name: file.name,
+      sizeLabel: filesize(file.size),
+      type: file.type || "Unknown format",
+    };
+  }, [file]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setError(""); // Clear previous errors
+    setError("");
 
     if (!file) {
       setError("Please select a video file to upload.");
@@ -38,15 +69,13 @@ const VideoUpload = () => {
 
     try {
       const response = await axios.post("/api/video-upload", formData);
-
       if (response.status === 200) {
-        console.log("Video uploaded successfully");
-        router.push("/");
+        router.push("/home");
       }
-    } catch (err) {
-      console.error("Error uploading video:", err);
+    } catch (err: any) {
       setError(
-        "An error occurred while uploading the video. Please try again.",
+        err.response?.data?.error ||
+          "An error occurred while uploading the video. Please try again."
       );
     } finally {
       setIsUploading(false);
@@ -54,146 +83,197 @@ const VideoUpload = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-2xl font-sans">
-      <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Upload Video</h1>
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm font-medium">
-            {error}
+    <div className="grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
+      <Card className="bg-black/40 border-white/10 text-white backdrop-blur-sm">
+        <CardHeader className="space-y-3">
+          <div className="flex items-center gap-2 text-white">
+            <CloudUpload className="size-4" />
+            <span className="text-sm font-medium">Cloudinary uploader</span>
           </div>
-        )}
+          <CardTitle className="text-2xl font-semibold md:text-3xl">
+            Upload a new video.
+          </CardTitle>
+          <CardDescription className="max-w-2xl text-sm leading-6 text-neutral-400">
+            This form keeps the same backend flow and sends your file, title, description, and size to the current upload endpoint.
+          </CardDescription>
+        </CardHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title Input */}
-          <div>
-            <label
-              htmlFor="title"
-              className="block text-sm font-semibold text-gray-700 mb-2"
-            >
-              Video Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="title"
-              type="text"
-              required
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              disabled={isUploading}
-              placeholder="Enter an engaging title"
-              className="w-full p-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:opacity-60"
-            />
-          </div>
-
-          {/* Description Input */}
-          <div>
-            <label
-              htmlFor="description"
-              className="block text-sm font-semibold text-gray-700 mb-2"
-            >
-              Description
-            </label>
-            <textarea
-              id="description"
-              rows={4}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              disabled={isUploading}
-              placeholder="Tell viewers about your video..."
-              className="w-full p-3 bg-gray-50 border border-gray-300 text-gray-900 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:opacity-60 resize-y"
-            />
-          </div>
-
-          {/* File Upload Input */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Video File <span className="text-red-500">*</span>
-            </label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-blue-400 transition-colors bg-gray-50">
-              <div className="space-y-1 text-center">
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
-                  stroke="currentColor"
-                  fill="none"
-                  viewBox="0 0 48 48"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <div className="flex text-sm text-gray-600 justify-center">
-                  <label
-                    htmlFor="file-upload"
-                    className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-                  >
-                    <span>Upload a file</span>
-                    <input
-                      id="file-upload"
-                      name="file-upload"
-                      type="file"
-                      accept="video/*"
-                      className="sr-only"
-                      onChange={(e) => setFile(e.target.files?.[0] || null)}
-                      disabled={isUploading}
-                    />
-                  </label>
-                  <p className="pl-1">or drag and drop</p>
-                </div>
-                <p className="text-xs text-gray-500">
-                  MP4, WebM, or OGG up to 50MB
-                </p>
-                {file && (
-                  <p className="text-sm font-medium text-green-600 mt-2">
-                    Selected: {file.name} (
-                    {(file.size / (1024 * 1024)).toFixed(2)} MB)
-                  </p>
-                )}
-              </div>
+        <CardContent>
+          {error && (
+            <div className="flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-400 mb-6">
+              <CircleAlert className="size-5 shrink-0" />
+              <span className="text-sm font-medium">{error}</span>
             </div>
-          </div>
+          )}
 
-          {/* Submit Button */}
-          <div className="pt-4">
-            <button
+          {isStarter && isLoaded && (
+            <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-6 text-center mb-6">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/20 text-blue-400">
+                <Crown className="size-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white">Creator Plan Limits Apply</h3>
+              <p className="mt-2 text-sm text-neutral-300">
+                You have 5 video uploads per month on the Creator plan. Upgrade to Studio for 100 uploads, or Production for unlimited access.
+              </p>
+              <Button asChild className="mt-4 bg-white text-black hover:bg-neutral-200">
+                <Link href="/pricing">View Pricing</Link>
+              </Button>
+            </div>
+          )}
+
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="title" className="text-neutral-200">Video title</Label>
+              <Input
+                id="title"
+                type="text"
+                required
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                disabled={isUploading}
+                placeholder="Enter an engaging title"
+                className="bg-white/5 border-white/10 text-white placeholder:text-neutral-500 focus-visible:ring-white/20"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-neutral-200">Description</Label>
+              <Textarea
+                id="description"
+                rows={5}
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                disabled={isUploading}
+                placeholder="Tell viewers what this video is about"
+                className="bg-white/5 border-white/10 text-white placeholder:text-neutral-500 focus-visible:ring-white/20"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <Label htmlFor="file-upload" className="text-neutral-200">Video file</Label>
+                <span className="text-xs text-neutral-500">
+                  MP4, WebM, or OGG up to 50MB
+                </span>
+              </div>
+
+              <Label 
+                htmlFor="file-upload"
+                className="flex cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-white/20 bg-white/5 px-6 py-10 text-center transition-colors hover:border-white/40 hover:bg-white/10"
+              >
+                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white/10 text-white">
+                  <FileVideo className="size-8" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold text-white">Choose a source video</p>
+                  <p className="text-sm text-neutral-400">
+                    Select a file to upload and compress with Cloudinary.
+                  </p>
+                </div>
+                <Input
+                  id="file-upload"
+                  name="file-upload"
+                  type="file"
+                  accept="video/*"
+                  className="hidden"
+                  onChange={(event) => setFile(event.target.files?.[0] || null)}
+                  disabled={isUploading}
+                />
+              </Label>
+            </div>
+
+            <Button
               type="submit"
-              disabled={isUploading || !file || !title.trim()}
-              className="w-full flex justify-center items-center bg-blue-600 text-white font-semibold py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+              disabled={!canSubmit}
+              className="w-full bg-white text-black hover:bg-neutral-200 disabled:bg-white/20 disabled:text-white/50"
             >
               {isUploading ? (
                 <>
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Uploading Video...
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Uploading video...
                 </>
               ) : (
-                "Upload Video"
+                <>
+                  <CloudUpload className="mr-2 size-4" />
+                  Upload video
+                </>
               )}
-            </button>
-          </div>
-        </form>
-      </div>
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <aside className="space-y-6">
+        <Card className="bg-black/40 border-white/10 text-white backdrop-blur-sm">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-white/10 p-3 text-white">
+                <Sparkles className="size-5" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Upload checklist</CardTitle>
+                <CardDescription className="text-neutral-400 mt-1">Keep the media pipeline clean and predictable</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-neutral-300">
+            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+              Add a title for the upload.
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+              Include a description if you need dashboard context.
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+              Choose a supported file up to 50MB.
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-black/40 border-white/10 text-white backdrop-blur-sm">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-white/10 p-3 text-white">
+                <WandSparkles className="size-5" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Selected media</CardTitle>
+                <CardDescription className="text-neutral-400 mt-1">Real file details from the chosen upload</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {uploadSummary ? (
+              <div className="space-y-4">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm text-neutral-400">File name</p>
+                  <p className="mt-1 break-all font-semibold text-white">
+                    {uploadSummary.name}
+                  </p>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-sm text-neutral-400">File size</p>
+                    <p className="mt-1 text-lg font-bold text-white">
+                      {uploadSummary.sizeLabel}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-sm text-neutral-400">MIME type</p>
+                    <p className="mt-1 text-lg font-bold text-white">{uploadSummary.type}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-white/20 bg-white/5 p-6 text-sm leading-6 text-neutral-500 text-center">
+                Select a video file to show its real upload details here before you submit the form.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </aside>
     </div>
   );
 };

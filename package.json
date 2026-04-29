@@ -1,38 +1,59 @@
 {
-  "name": "cloudinary-saas",
+  "name": "snaporbitai",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@base-ui/react": "^1.4.1",
     "@clerk/nextjs": "^7.0.6",
+    "@distube/ytdl-core": "^4.16.12",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@splinetool/react-spline": "^4.1.0",
+    "@splinetool/runtime": "^1.12.87",
     "axios": "^1.13.6",
+    "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.9.0",
+    "clsx": "^2.1.1",
     "dayjs": "^1.11.20",
     "dotenv": "^17.3.1",
     "filesize": "^11.0.14",
+    "framer-motion": "^12.38.0",
     "lucide-react": "^1.7.0",
     "next": "16.2.1",
     "next-cloudinary": "^6.17.5",
+    "next-themes": "^0.4.6",
+    "razorpay": "^2.9.6",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20.19.37",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "daisyui": "^5.5.19",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/ui": "^4.1.4",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
+    "jsdom": "^29.0.2",
+    "nodemon": "^3.1.14",
     "prisma": "^7.5.0",
+    "shadcn": "^4.4.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.4"
   }
 }

@@ -1,7 +1,22 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { CldImage } from "next-cloudinary";
+import { useEffect, useMemo, useState } from "react";
+import { CldImage, getCldImageUrl } from "next-cloudinary";
+import { useUser } from "@clerk/nextjs";
+import Link from "next/link";
+import {
+  Download,
+  ImagePlus,
+  LayoutTemplate,
+  Share2,
+  Sparkles,
+  Crown,
+  Loader2
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 const socialFormats = {
   "Instagram Square (1:1)": { width: 1080, height: 1080, aspectRatio: "1:1" },
@@ -14,13 +29,16 @@ const socialFormats = {
 type SocialFormat = keyof typeof socialFormats;
 
 export default function SocialShare() {
+  const { user } = useUser();
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [selectedFormat, setSelectedFormat] = useState<SocialFormat>(
-    "Instagram Square (1:1)",
-  );
+  const [selectedFormat, setSelectedFormat] = useState<SocialFormat>("Instagram Square (1:1)");
   const [isUploading, setIsUploading] = useState(false);
   const [isTransforming, setIsTransforming] = useState(false);
-  const imageRef = useRef<HTMLImageElement>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string>("");
+
+  const plan = user?.publicMetadata?.plan as string;
+  const isPro = plan === "pro" || plan === "pro_plus";
 
   useEffect(() => {
     if (uploadedImage) {
@@ -28,12 +46,29 @@ export default function SocialShare() {
     }
   }, [selectedFormat, uploadedImage]);
 
-  const handleFileUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const selectedPreset = socialFormats[selectedFormat];
+  const previewUrl = useMemo(() => {
+    if (!uploadedImage) {
+      return "";
+    }
+
+    return getCldImageUrl({
+      src: uploadedImage,
+      width: selectedPreset.width,
+      height: selectedPreset.height,
+      crop: "fill",
+      gravity: "auto",
+      format: "png",
+      quality: "auto",
+    });
+  }, [selectedPreset.height, selectedPreset.width, uploadedImage]);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    setError(null);
+    setFileName(file.name);
     setIsUploading(true);
     const formData = new FormData();
     formData.append("file", file);
@@ -44,24 +79,24 @@ export default function SocialShare() {
         body: formData,
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to upload image");
+        throw new Error(data.error || "Failed to upload image");
       }
 
-      const data = await response.json();
       setUploadedImage(data.public_id);
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      alert("Error uploading image");
+    } catch (err: any) {
+      setError(err.message || "Image upload failed. Please try again.");
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleImageDownload = () => {
-    if (!imageRef.current) return;
+    if (!previewUrl) return;
 
-    fetch(imageRef.current.src)
+    fetch(previewUrl)
       .then((response) => response.blob())
       .then((blob) => {
         const url = window.URL.createObjectURL(blob);
@@ -76,126 +111,204 @@ export default function SocialShare() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-5xl font-sans">
-      <h1 className="text-3xl font-bold mb-8 text-gray-800">
-        Social Media Image Formatter
-      </h1>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* LEFT COLUMN: Controls */}
-        <div className="lg:col-span-4 space-y-6 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          {/* File Upload Section */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Upload Image
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileUpload}
-              disabled={isUploading}
-              className="block w-full text-sm text-gray-500
-                file:mr-4 file:py-2.5 file:px-4
-                file:rounded-md file:border-0
-                file:text-sm file:font-semibold
-                file:bg-blue-50 file:text-blue-700
-                hover:file:bg-blue-100 disabled:opacity-50 cursor-pointer"
-            />
-            {isUploading && (
-              <p className="text-sm text-blue-600 mt-2 font-medium animate-pulse">
-                Uploading to Cloudinary...
-              </p>
-            )}
+    <div className="space-y-8 text-white">
+      <section className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-purple-400">
+            <Share2 className="size-4" />
+            <span className="text-sm font-medium">Social formatter</span>
           </div>
-
-          {/* Format Selection & Download (Hidden until image uploaded) */}
-          {uploadedImage && (
-            <>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Select Target Format
-                </label>
-                <select
-                  value={selectedFormat}
-                  onChange={(e) =>
-                    setSelectedFormat(e.target.value as SocialFormat)
-                  }
-                  className="w-full p-2.5 bg-gray-50 border border-gray-300 text-gray-900 rounded-md focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                >
-                  {Object.keys(socialFormats).map((format) => (
-                    <option key={format} value={format}>
-                      {format}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="pt-4">
-                <button
-                  onClick={handleImageDownload}
-                  disabled={isTransforming || isUploading}
-                  className="w-full bg-blue-600 text-white font-medium py-3 px-4 rounded-md hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
-                >
-                  {isTransforming ? "Processing Image..." : "Download Image"}
-                </button>
-              </div>
-            </>
-          )}
+          <h2 className="text-2xl font-semibold md:text-3xl">
+            Prepare image exports for each social channel.
+          </h2>
+          <p className="max-w-2xl text-sm leading-6 text-neutral-400">
+            Upload a source image, choose the target format, and download the generated Cloudinary result.
+          </p>
         </div>
 
-        {/* RIGHT COLUMN: Preview */}
-        <div className="lg:col-span-8 bg-gray-50 border border-gray-200 p-4 rounded-xl shadow-inner min-h-125 flex items-center justify-center relative overflow-hidden">
-          {uploadedImage ? (
-            <div className="relative w-full h-full flex justify-center items-center">
-              {/* Loading Overlay for Cloudinary Transformations */}
-              {isTransforming && (
-                <div className="absolute inset-0 bg-gray-50/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
-                  <div className="flex flex-col items-center">
-                    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
-                    <span className="text-gray-700 font-medium text-sm">
-                      Applying Crop & Format...
-                    </span>
+        <div className="flex gap-3">
+          <div className="rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm shadow-sm backdrop-blur-sm">
+            <p className="text-neutral-500">Presets</p>
+            <p className="mt-1 font-semibold text-white">5 formats</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm shadow-sm backdrop-blur-sm">
+            <p className="text-neutral-500">Ratio</p>
+            <p className="mt-1 font-semibold text-white">{selectedPreset.aspectRatio}</p>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid gap-8 xl:grid-cols-[360px_1fr]">
+        <aside className="space-y-6">
+          <Card className="bg-black/40 border-white/10 text-white backdrop-blur-sm">
+            <CardContent className="p-6">
+              {!isPro && (
+                <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-4 text-center mb-6">
+                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/20 text-blue-400">
+                    <Crown className="size-5" />
                   </div>
+                  <p className="text-sm font-bold text-white">Studio Plan Required</p>
+                  <p className="mt-1 text-xs text-neutral-300">
+                    Smart Social Formatting is available on the Studio plan.
+                  </p>
+                  <Button asChild size="sm" className="mt-3 bg-white text-black hover:bg-neutral-200">
+                    <Link href="/pricing">Upgrade</Link>
+                  </Button>
                 </div>
               )}
 
-              {/* Cloudinary Image Component */}
+              <div className={`space-y-6 ${!isPro ? "opacity-50 pointer-events-none" : ""}`}>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-white">
+                    <ImagePlus className="size-5" />
+                    <h3 className="text-xl font-bold">Upload source image</h3>
+                  </div>
+                  <p className="text-sm leading-6 text-neutral-400">
+                    Choose the original file you want Cloudinary to crop and format.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-neutral-200">Image file</Label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    disabled={isUploading}
+                    className="bg-white/5 border-white/10 text-white file:text-white file:bg-white/10 file:border-0 hover:file:bg-white/20 file:rounded-md file:px-2 file:py-1 file:mr-2 file:text-sm file:font-medium"
+                  />
+                </div>
+
+                {fileName && (
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm">
+                    <p className="font-semibold text-neutral-200">Selected file</p>
+                    <p className="mt-1 break-all text-neutral-400">{fileName}</p>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label className="text-neutral-200">Target format</Label>
+                  <select
+                    value={selectedFormat}
+                    onChange={(event) => setSelectedFormat(event.target.value as SocialFormat)}
+                    disabled={!uploadedImage}
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {Object.keys(socialFormats).map((format) => (
+                      <option key={format} value={format} className="bg-black text-white">
+                        {format}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <div className="mb-2 flex items-center gap-2 text-purple-400">
+                      <LayoutTemplate className="size-4" />
+                      <p className="font-semibold text-white">Export size</p>
+                    </div>
+                    <p className="text-lg font-bold text-white">
+                      {selectedPreset.width} × {selectedPreset.height}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <div className="mb-2 flex items-center gap-2 text-green-400">
+                      <Sparkles className="size-4" />
+                      <p className="font-semibold text-white">AI crop</p>
+                    </div>
+                    <p className="text-sm leading-6 text-neutral-400">
+                      Auto gravity keeps the subject centered in the final export.
+                    </p>
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
+                    {error}
+                  </div>
+                )}
+
+                {isUploading && (
+                  <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3 text-sm text-blue-400 flex items-center gap-2">
+                    <Loader2 className="size-4 animate-spin" />
+                    Uploading image to Cloudinary...
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleImageDownload}
+                  disabled={!uploadedImage || isTransforming || isUploading}
+                  className="w-full bg-white text-black hover:bg-neutral-200 disabled:bg-white/20 disabled:text-white/50"
+                >
+                  {isTransforming ? (
+                    <><Loader2 className="mr-2 size-4 animate-spin" /> Preparing export...</>
+                  ) : (
+                    <><Download className="mr-2 size-4" /> Download image</>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </aside>
+
+        <section className="relative min-h-[540px] overflow-hidden rounded-2xl border border-white/10 bg-black/40 p-4 shadow-sm md:p-6 backdrop-blur-sm">
+          {uploadedImage ? (
+            <div className="relative flex h-full min-h-[500px] items-center justify-center rounded-xl bg-white/5 p-4">
+              {isTransforming && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-xl bg-black/75 backdrop-blur-sm">
+                  <Loader2 className="size-8 animate-spin text-white" />
+                  <p className="text-sm font-medium text-neutral-300">
+                    Applying crop and export format...
+                  </p>
+                </div>
+              )}
+
               <CldImage
                 src={uploadedImage}
-                width={socialFormats[selectedFormat].width}
-                height={socialFormats[selectedFormat].height}
+                width={selectedPreset.width}
+                height={selectedPreset.height}
                 crop="fill"
-                gravity="auto" // AI cropping to keep subjects centered
+                gravity="auto"
+                format="png"
+                quality="auto"
                 alt={`Preview for ${selectedFormat}`}
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="max-w-full max-h-150 object-contain shadow-lg border border-gray-300"
-                ref={imageRef}
-                onLoad={() => setIsTransforming(false)} // Clear loading state when done
+                sizes="(max-width: 1280px) 100vw, 60vw"
+                className="max-h-[540px] w-auto rounded-xl border border-white/10 object-contain shadow-md"
+                onLoad={() => setIsTransforming(false)}
               />
             </div>
           ) : (
-            /* Empty State */
-            <div className="text-gray-400 flex flex-col items-center">
-              <svg
-                className="w-16 h-16 mb-4 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                ></path>
-              </svg>
-              <p className="text-lg font-medium text-gray-500">
-                No Image Selected
-              </p>
-              <p className="text-sm mt-1">Upload a file to see the preview</p>
+            <div className="flex h-full min-h-[500px] flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-white/20 bg-white/5 p-8 text-center">
+              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white/10 text-white">
+                <ImagePlus className="size-10" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold text-white">Preview your next export</h3>
+                <p className="max-w-md text-sm leading-7 text-neutral-400">
+                  Upload a real image to see Cloudinary generate the selected social media crop and export.
+                </p>
+              </div>
             </div>
           )}
-        </div>
+
+          {uploadedImage && (
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-sm text-neutral-400">Preset</p>
+                <p className="mt-1 font-semibold text-white">{selectedFormat}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-sm text-neutral-400">Aspect ratio</p>
+                <p className="mt-1 font-semibold text-white">{selectedPreset.aspectRatio}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-sm text-neutral-400">Download type</p>
+                <p className="mt-1 font-semibold text-white">PNG export</p>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

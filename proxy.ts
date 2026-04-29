@@ -2,15 +2,30 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
-  "/sign-in",
-  "/sign-up",
   "/",
-  "/home",
+  "/pricing",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+  "/verify-email",
+  "/forgot-password",
+  "/reset-password",
+]);
+
+const isRedirectIfSignedInRoute = createRouteMatcher([
+  "/",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+  "/verify-email",
+  "/forgot-password",
+  "/reset-password",
 ]);
 
 const isPublicApiRoute = createRouteMatcher([
   "/api/videos",
   "/api/image-upload",
+  "/api/video-upload",
+  "/api/auth/auto-logout",
+  "/api/webhook/razorpay",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -19,7 +34,7 @@ export default clerkMiddleware(async (auth, req) => {
   const isHomePage = currentUrl.pathname === "/home";
   const isApiRequest = currentUrl.pathname.startsWith("/api");
 
-  if (userId && isPublicRoute(req) && !isHomePage) {
+  if (userId && isRedirectIfSignedInRoute(req) && !isHomePage) {
     return NextResponse.redirect(new URL("/home", req.url));
   }
 

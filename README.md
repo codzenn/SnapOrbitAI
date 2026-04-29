@@ -1,6 +1,6 @@
-# Cloudinary Video SaaS
+# SnapOrbitAI
 
-A modern, full-stack Video Management SaaS platform built with Next.js, featuring seamless video uploads, social sharing capabilities, and intelligent media processing.
+git add README.md
 
 ---
 
@@ -23,7 +23,7 @@ A modern, full-stack Video Management SaaS platform built with Next.js, featurin
 
 ## 🎯 Overview
 
-Cloudinary Video SaaS is a comprehensive video management platform designed for content creators and businesses. It provides an intuitive interface for uploading, organizing, and sharing videos with advanced compression capabilities and social media integration.
+SnapOrbitAI is a comprehensive media management platform designed for content creators and businesses. It provides an intuitive interface for uploading, organizing, optimizing, and sharing media with advanced compression capabilities and social media integration.
 
 **Live Demo:** [Coming Soon](#)  
 **Documentation:** See [docs](#) for detailed guides
@@ -93,8 +93,8 @@ Before you begin, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/cloudinary-saas.git
-cd cloudinary-saas
+git clone https://github.com/yourusername/snaporbitai.git
+cd snaporbitai
 ```
 
 ### 2. Install Dependencies
@@ -212,7 +212,7 @@ CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 ## 📁 Project Structure
 
 ```
-cloudinary-saas/
+snaporbitai/
 ├── app/
 │   ├── (app)/                    # Protected app routes
 │   │   ├── home/                 # Dashboard
@@ -343,8 +343,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 For support, email support@example.com or open an issue on GitHub.
 
-**Report a Bug:** [GitHub Issues](https://github.com/yourusername/cloudinary-saas/issues)  
-**Feature Requests:** [GitHub Discussions](https://github.com/yourusername/cloudinary-saas/discussions)
+**Report a Bug:** [GitHub Issues](https://github.com/yourusername/snaporbitai/issues)  
+**Feature Requests:** [GitHub Discussions](https://github.com/yourusername/snaporbitai/discussions)
 
 ---
 
