@@ -1,91 +1,144 @@
 # SnapOrbitAI
 
-SnapOrbitAI is a production-ready AI media workspace for creators, marketers, and teams. It combines Cloudinary media delivery, Gemini-powered image and video intelligence, Clerk authentication, Stripe billing, and Prisma/PostgreSQL persistence inside a single Next.js application.
+SnapOrbitAI is an AI content studio for creators, marketers, and teams who work with images, videos, and social-ready media assets. It combines upload management, AI image enhancement, video intelligence, semantic search, subscriptions, and usage analytics in one full-stack Next.js application.
 
-## What It Does
+The product is designed for a modern media workflow: upload content, clean it up, generate captions, analyze quality, repurpose formats, search by meaning, and manage paid access from the same workspace.
 
-SnapOrbitAI helps users upload, organize, enhance, analyze, and repurpose media assets through AI-assisted workflows.
+## Highlights
 
-### Image workflows
+- AI-powered image captions and hashtag ideas for social platforms
+- Background removal and generative image expansion through Cloudinary
+- Quality audits for composition, brightness, blur, and platform fit
+- Semantic asset search using Gemini embeddings
+- Batch image workflows with ZIP export
+- Video analysis with summaries, scenes, topics, mood, audio detection, and key quotes
+- Video captions, compression, and aspect-ratio conversion
+- Clerk authentication for protected user workspaces
+- Stripe subscriptions with Free, Pro, and Business plans
+- Prisma/PostgreSQL persistence for assets, trials, and subscriptions
+- Analytics dashboard for Business usage visibility
 
-- Asset library with search and filtering
-- Natural-language semantic search
-- AI-generated captions for social platforms
-- AI quality audit
-- Background removal
-- Generative fill / image expansion
-- Batch processing for repeated image operations
+## Tech Stack
 
-### Video workflows
+| Area | Technology |
+| --- | --- |
+| Framework | Next.js 16 App Router |
+| UI | React 19, Tailwind CSS 4, lucide-react, Base UI, Radix Slot |
+| Auth | Clerk |
+| Media | Cloudinary, next-cloudinary |
+| AI | Google Gemini |
+| Database | PostgreSQL, Prisma 7 |
+| Billing | Stripe |
+| Testing | Vitest, Testing Library |
+| Charts | Recharts |
 
-- AI video analysis with summary, scene timeline, mood, topics, and key quotes
-- Audio-aware video caption generation
-- Video compression to delivery-ready formats
-- Landscape-to-portrait video conversion for short-form platforms
+## Product Areas
 
-### Business workflows
+### Public Website
 
-- Usage analytics dashboard
-- Stripe-powered subscription management
-- Feature trial gating for free users
+- Dark landing page for the AI content studio brand
+- Social-media-focused favicon and shared brand mark
+- Feature, workflow, and pricing sections
+- Standalone pricing page with plan selection
 
-## Product Stack
+### Authenticated Workspace
 
-- `Next.js 16`
-- `React 19`
-- `TypeScript`
-- `Tailwind CSS`
-- `Clerk`
-- `Cloudinary`
-- `Google Gemini`
-- `Prisma`
-- `PostgreSQL`
-- `Stripe`
-- `Vitest`
+- Asset library for images and videos
+- Upload studio for content ingestion
+- Background removal workflow
+- Generative fill and expansion workflow
+- Batch processor for repeated image operations
+- Video Studio for analysis, captions, compression, and conversion
+- Analytics dashboard
+- Profile and subscription management
 
-## Core Architecture
+### API Surface
 
-- `app/`: App Router pages and API routes
-- `components/`: UI, media, AI, analytics, and video components
-- `lib/`: AI helpers, Cloudinary helpers, Prisma client, Stripe helpers, and trial logic
-- `prisma/`: schema and migrations
-- `__tests__/`: focused API and auth tests
+- `POST /api/image-upload`
+- `GET /api/videos`
+- `POST /api/videos/upload`
+- `POST /api/ai/captions`
+- `POST /api/ai/audit`
+- `POST /api/search`
+- `POST /api/transform/bg-remove`
+- `POST /api/transform/gen-fill`
+- `POST /api/batch`
+- `POST /api/video/analyze`
+- `POST /api/video/captions`
+- `POST /api/video/convert`
+- `GET /api/subscription/current`
+- `POST /api/stripe/checkout`
+- `POST /api/stripe/confirm`
+- `POST /api/stripe/portal`
+- `POST /api/stripe/webhook`
+- `POST /api/auth/auto-logout`
 
-## Main Routes
+## Plans and Access
 
-### App routes
+SnapOrbitAI uses Prisma as the source of truth for subscription state.
 
-- `/home`: Asset library
-- `/video-upload`: Single image upload workflow
-- `/video-studio`: Video upload, analysis, captions, and conversion
-- `/ai-bg-removal`: Background removal
-- `/ai-gen-expand`: Generative fill
-- `/batch-process`: Batch image operations
-- `/analytics`: Business analytics dashboard
-- `/profile`: Account and subscription profile
-- `/pricing`: Subscription plans
+| Plan | Intended User | Notes |
+| --- | --- | --- |
+| Free | New users testing the workflow | Limited trials per feature and 5 stored assets |
+| Pro | Solo creators and marketers | Higher asset limit and recurring AI usage |
+| Business | Teams and high-volume users | Unlimited-style workflows, analytics, and higher batch limits |
 
-### API routes
+Free trial usage is tracked in the `TrialUsage` model. Subscription records are stored in the `Subscription` model and synchronized through Stripe checkout, confirmation, portal, and webhook routes.
 
-- `/api/image-upload`
-- `/api/videos`
-- `/api/videos/upload`
-- `/api/video/analyze`
-- `/api/video/captions`
-- `/api/video/convert`
-- `/api/ai/captions`
-- `/api/ai/audit`
-- `/api/search`
-- `/api/batch`
-- `/api/subscription/current`
-- `/api/stripe/checkout`
-- `/api/stripe/confirm`
-- `/api/stripe/portal`
-- `/api/stripe/webhook`
+## Project Structure
+
+```text
+app/
+  (app)/                 Authenticated workspace routes
+  (auth)/                Clerk auth pages and recovery flows
+  api/                   Route handlers for AI, media, billing, and auth
+  pricing/               Standalone pricing page
+  favicon.ico            Browser favicon
+  favicon-source.svg     Editable favicon source
+  page.tsx               Landing page
+
+components/
+  ai/                    Caption, audit, and search UI
+  analytics/             Usage dashboard
+  auth/                  Auth form helpers
+  batch/                 Batch-processing UI
+  landing/               Landing page sections
+  media/                 Asset detail and comparison UI
+  ui/                    Shared UI primitives
+  video/                 Video Studio panels
+  BrandMark.tsx          Shared SnapOrbitAI logo mark
+
+lib/
+  ai.ts                  Gemini model setup
+  cloudinary.ts          Cloudinary URL helpers
+  embeddings.ts          Semantic search utilities
+  media-ai.ts            AI parsing helpers
+  prisma.ts              Prisma client
+  stripe.ts              Stripe client
+  trial.ts               Plan and trial access logic
+
+prisma/
+  schema.prisma          Video, TrialUsage, and Subscription models
+  migrations/            Database migrations
+
+__tests__/
+  api/                   API route tests
+  auth/                  Auth helper tests
+```
+
+## Data Model
+
+| Model | Purpose |
+| --- | --- |
+| `Video` | Stores uploaded image/video assets, Cloudinary IDs, AI metadata, quality scores, captions, embeddings, and video analysis fields |
+| `TrialUsage` | Tracks limited free usage by user and feature |
+| `Subscription` | Stores Stripe customer/subscription IDs, plan, status, and renewal period |
+
+Prisma Client is generated into `generated/prisma`.
 
 ## Environment Variables
 
-Create `.env.local` with the following values:
+Create `.env.local` for local development. Do not commit secrets.
 
 ```env
 DATABASE_URL=
@@ -117,166 +170,126 @@ STRIPE_BUSINESS_YEARLY_PRICE_ID=
 
 ## Local Development
 
-### Install
+### Prerequisites
+
+- Node.js 20 or newer
+- PostgreSQL database
+- Clerk application
+- Cloudinary account
+- Google AI API key
+- Stripe account for billing flows
+
+### Install Dependencies
 
 ```bash
 npm install
 ```
 
-### Database
+### Prepare the Database
 
 ```bash
-npx prisma migrate dev
 npx prisma generate
+npx prisma migrate dev
 ```
 
-### Run
+### Run the App
 
 ```bash
 npm run dev
 ```
 
-### Quality checks
+Open `http://localhost:3000`.
+
+### Useful Scripts
 
 ```bash
-npm run lint
-npm run test
+npm run dev      # Start the local Next.js dev server
+npm run build    # Build for production
+npm run start    # Start the production server
+npm run lint     # Run ESLint
+npm run test     # Run Vitest tests
+```
+
+### Type Check
+
+```bash
 npx tsc --noEmit
 ```
 
-## Production Deployment
+## Stripe Webhooks
 
-This project should be deployed as a full Node.js web application with PostgreSQL, not as a static site.
+For local webhook testing, forward Stripe events to:
 
-### Recommended host
-
-**Best practical choice:** `Railway`
-
-Why Railway is a strong fit for this project:
-
-- Supports full `Next.js` server deployments
-- Works well with `PostgreSQL` and `Prisma`
-- Handles environment variables cleanly
-- Good fit for Stripe webhooks and server routes
-- Better suited than hobby-style serverless setups for buffered media uploads and longer AI requests
-
-### Other professional options
-
-- `Render`: solid managed web service + Postgres setup
-- `Fly.io`: best if you want more control over runtime behavior
-- `DigitalOcean App Platform`: good if you already use DigitalOcean services
-- `AWS ECS / App Runner`, `Azure Container Apps`, or a VPS: best for full infrastructure control
-
-### Not ideal for this project
-
-- Static-only hosting
-- Edge-only hosting
-- Platforms with very small request-body or execution-time limits
-
-This project includes:
-
-- file uploads proxied through the app
-- Stripe webhooks
-- Prisma database access
-- Cloudinary server uploads
-- Gemini video analysis requests that can take longer than typical short serverless invocations
-
-## Railway Deployment Checklist
-
-### 1. Create infrastructure
-
-- Create a new Railway project
-- Add a PostgreSQL service
-- Add a web service for this repo
-
-### 2. Configure build and start
-
-Use the default Node build flow or equivalent commands:
-
-```bash
-npm install
-npx prisma generate
-npm run build
-npm run start
+```text
+http://localhost:3000/api/stripe/webhook
 ```
 
-### 3. Run migrations
-
-On deploy, run:
-
-```bash
-npx prisma migrate deploy
-```
-
-### 4. Set environment variables
-
-Add all variables from the `Environment Variables` section.
-
-### 5. Configure third-party dashboards
-
-#### Clerk
-
-- Add your production domain
-- Set sign-in and sign-up URLs
-- Confirm redirect URLs point to your live app
-
-#### Stripe
-
-- Create live products and prices
-- Set live price IDs in env vars
-- Point the live webhook to:
+For production:
 
 ```text
 https://your-domain.com/api/stripe/webhook
 ```
 
-#### Cloudinary
+Set the resulting webhook signing secret as `STRIPE_WEBHOOK_SECRET`.
 
-- Verify upload limits and credentials
-- Confirm the cloud name matches the delivery account you want to use
+## Deployment
 
-#### Gemini
+This app should be deployed as a full Node.js web application with PostgreSQL. It is not a static site.
 
-- Use a valid production API key with billing enabled if required
+Recommended hosting options:
 
-## Production Readiness Notes
+- Railway
+- Render
+- Fly.io
+- DigitalOcean App Platform
+- AWS App Runner or ECS
+- Azure Container Apps
 
-- Prisma `Subscription` is the source of truth for plan access
-- Stripe webhook support is still required in production
-- Free feature usage is tracked in `TrialUsage`
-- Image uploads are indexed for semantic search
-- Video analysis uses Gemini video understanding with inline upload for smaller files and Files API for larger files
+Production deployment checklist:
 
-## Suggested Domain Setup
+1. Provision PostgreSQL.
+2. Set all required environment variables.
+3. Run `npm install`.
+4. Run `npx prisma generate`.
+5. Run `npm run build`.
+6. Run `npx prisma migrate deploy`.
+7. Start with `npm run start`.
+8. Configure Clerk production URLs.
+9. Configure Cloudinary credentials and upload limits.
+10. Configure Stripe live products, prices, and webhook endpoint.
+11. Confirm Gemini API access and billing readiness.
 
-For a real public website, use:
+## Contributor Notes
 
-- `snaporbitai.com` or your brand domain
-- `app.yourdomain.com` for the product
-- `www.yourdomain.com` for the marketing site if you later split them
+This project uses Next.js 16. Before changing framework APIs, routing conventions, metadata, or file conventions, read the relevant local documentation in:
 
-A common setup:
-
-- Marketing: `www.yourdomain.com`
-- App: `app.yourdomain.com`
-- API and webhooks remain under the app domain
-
-## Scripts
-
-```bash
-npm run dev
-npm run build
-npm run start
-npm run lint
-npm run test
+```text
+node_modules/next/dist/docs/
 ```
 
-## Repository Notes
+Useful docs for this codebase:
 
-- Local tooling folders such as `.clerk/` and `.vercel/` should not be committed
-- IDE-specific project notes can stay local and are now ignored through `.gitignore`
-- Unused starter assets were removed from `public/`
+- `01-app/01-getting-started/03-layouts-and-pages.md`
+- `01-app/01-getting-started/11-css.md`
+- `01-app/03-api-reference/03-file-conventions/01-metadata/app-icons.md`
+
+## Quality Notes
+
+- API behavior is covered by focused Vitest tests.
+- Auth helper behavior has dedicated tests.
+- Media and AI flows should be tested with real provider credentials before production launch.
+- Stripe subscription behavior should be validated with test-mode checkout and webhook events.
+
+## Branding
+
+The current brand mark is a social-media content card with a play button and share nodes. It is implemented in:
+
+- `components/BrandMark.tsx`
+- `app/favicon-source.svg`
+- `app/favicon.ico`
+
+Regenerate `app/favicon.ico` from `app/favicon-source.svg` if the mark changes.
 
 ## License
 
-Add your preferred license before public deployment.
+No license has been selected yet. Add a license before making the repository public.
