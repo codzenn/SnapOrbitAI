@@ -1,246 +1,137 @@
-'use client';
+"use client";
 
-import React, { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
+import { useState } from "react";
+import Link from "next/link";
+import { ArrowRight, Check } from "lucide-react";
 
-interface PricingTier {
+type PricingTier = {
+  id: "free" | "pro" | "business";
   name: string;
-  monthlyPrice: number;
-  yearlyPrice: number;
-  monthlyLabel: string;
-  yearlyLabel: string;
-  accentColor: string;
-  textColor: string;
-  borderColor: string;
-  isMostPopular: boolean;
+  description: string;
+  monthly: string;
+  yearly: string;
+  period: string;
+  highlight?: boolean;
   features: string[];
-  ctaText: string;
-  ctaStyle: 'solid' | 'outline';
-}
+  cta: string;
+};
 
 const pricingTiers: PricingTier[] = [
   {
-    name: 'Free',
-    monthlyPrice: 0,
-    yearlyPrice: 0,
-    monthlyLabel: 'No credit card required',
-    yearlyLabel: 'No credit card required',
-    accentColor: '#7A90B8',
-    textColor: '#7A90B8',
-    borderColor: '#1E2D47',
-    isMostPopular: false,
+    id: "free",
+    name: "Free",
+    description: "For testing the full workflow before you commit.",
+    monthly: "$0",
+    yearly: "$0",
+    period: "forever",
     features: [
-      '1 trial use of every feature',
-      'Background removal',
-      'Generative fill',
-      'AI captions + hashtags',
-      'Quality audit',
-      'Batch (3 images)',
-      'Semantic search (3 searches)',
+      "One trial use of every major feature",
+      "Background removal and generative fill",
+      "AI captions, audit, and semantic search",
+      "Video compression plus trial video AI",
+      "Small asset library for experiments",
     ],
-    ctaText: 'Start free →',
-    ctaStyle: 'outline',
+    cta: "Start free",
   },
   {
-    name: 'Pro',
-    monthlyPrice: 12,
-    yearlyPrice: 99,
-    monthlyLabel: 'or $99/yr — save 31%',
-    yearlyLabel: 'or $12/mo — save 31%',
-    accentColor: '#4F8EF7',
-    textColor: '#4F8EF7',
-    borderColor: '#4F8EF7',
-    isMostPopular: true,
+    id: "pro",
+    name: "Pro",
+    description: "For solo creators and marketers using AI media every week.",
+    monthly: "$12",
+    yearly: "$99",
+    period: "per month",
+    highlight: true,
     features: [
-      'Everything in Free',
-      'Unlimited background removal',
-      'Unlimited generative fill',
-      'Unlimited AI captions',
-      'Unlimited quality audits',
-      '50 batch jobs/month (10 images)',
-      '100 semantic searches/month',
-      'Video Studio (analyze + captions)',
-      '500 assets · 90-day storage',
+      "Unlimited image cleanup and captions",
+      "Unlimited quality audits",
+      "Natural-language asset search",
+      "Batch processing up to 10 images",
+      "Video Studio analysis and captions",
     ],
-    ctaText: 'Start Pro →',
-    ctaStyle: 'solid',
+    cta: "Start Pro",
   },
   {
-    name: 'Business',
-    monthlyPrice: 29,
-    yearlyPrice: 249,
-    monthlyLabel: 'or $249/yr — save 28%',
-    yearlyLabel: 'or $29/mo — save 28%',
-    accentColor: '#A855F7',
-    textColor: '#A855F7',
-    borderColor: '#2A3F5F',
-    isMostPopular: false,
+    id: "business",
+    name: "Business",
+    description: "For teams that need more batch volume and usage visibility.",
+    monthly: "$29",
+    yearly: "$249",
+    period: "per month",
     features: [
-      'Everything in Pro',
-      'Unlimited batch (25 images/job)',
-      'Unlimited searches',
-      'Unlimited assets + storage',
-      'Usage analytics dashboard',
-      'Stripe customer portal',
-      'Priority support (12hr)',
+      "Everything in Pro",
+      "Batch processing up to 25 images",
+      "Unlimited searches and conversions",
+      "Usage analytics dashboard",
+      "Priority support and Stripe portal",
     ],
-    ctaText: 'Start Business →',
-    ctaStyle: 'outline',
+    cta: "Start Business",
   },
 ];
 
 function PricingCard({ tier, isYearly }: { tier: PricingTier; isYearly: boolean }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const price = isYearly ? tier.yearlyPrice : tier.monthlyPrice;
-  const label = isYearly ? tier.yearlyLabel : tier.monthlyLabel;
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && ref.current) {
-          ref.current.classList.add('revealed');
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current);
-      }
-    };
-  }, []);
+  const price = isYearly ? tier.yearly : tier.monthly;
+  const href = tier.id === "free" ? "/sign-up" : `/pricing?plan=${tier.id}`;
+  const period = isYearly && tier.id !== "free" ? "per year" : tier.period;
 
   return (
     <div
-      ref={ref}
-      className="scroll-reveal rounded-lg border p-8"
-      style={{
-        background: tier.isMostPopular
-          ? 'linear-gradient(145deg, #0E1420 0%, #0F1628 100%)'
-          : '#0E1420',
-        borderColor: tier.borderColor,
-        boxShadow: tier.isMostPopular
-          ? '0 0 60px rgba(79, 142, 247, 0.15)'
-          : 'none',
-        transform: tier.isMostPopular ? 'scale(1.03)' : 'scale(1)',
-        transition: 'all 300ms ease',
-      }}
+      className={`flex h-full flex-col rounded-lg border p-6 ${
+        tier.highlight
+          ? "border-[#0f8f7a] bg-[#101014] text-white shadow-2xl shadow-black/15"
+          : "border-white/10 bg-[#0b1110] text-white"
+      }`}
     >
-      {/* Most Popular Badge */}
-      {tier.isMostPopular && (
-        <div
-          className="inline-block px-3 py-1 rounded text-xs font-semibold mb-4"
-          style={{
-            background: '#4F8EF7',
-            color: '#080B11',
-            fontFamily: 'Syne, sans-serif',
-          }}
-        >
-          ★ MOST POPULAR
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-2xl font-semibold text-white">
+            {tier.name}
+          </h3>
+          <p className={`mt-3 text-sm leading-6 ${tier.highlight ? "text-white/65" : "text-[#a7b8b4]"}`}>
+            {tier.description}
+          </p>
         </div>
-      )}
-
-      {/* Plan Name */}
-      <div
-        className="text-xs font-bold uppercase tracking-wide mb-2"
-        style={{
-          color: tier.textColor,
-          fontFamily: 'Syne, sans-serif',
-        }}
-      >
-        {tier.name}
+        {tier.highlight ? (
+          <span className="rounded-full bg-[#64d6c1] px-3 py-1 text-xs font-semibold text-[#101014]">
+            Popular
+          </span>
+        ) : null}
       </div>
 
-      {/* Price */}
-      <div className="flex items-baseline gap-2 mb-1">
-        <span
-          style={{
-            fontSize: 'clamp(36px, 5vw, 52px)',
-            color: '#F0F4FF',
-            fontFamily: 'Syne, sans-serif',
-            fontWeight: 800,
-          }}
-        >
-          ${price}
+      <div className="mt-8 flex items-end gap-2">
+        <span className="text-5xl font-semibold text-white">
+          {price}
         </span>
-        <span
-          style={{
-            color: '#3D5278',
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '16px',
-          }}
-        >
-          /mo
+        <span className={`pb-1 text-sm ${tier.highlight ? "text-white/50" : "text-[#a7b8b4]"}`}>
+          {period}
         </span>
       </div>
 
-      {/* Price Label */}
-      <p
-        className="text-xs mb-6"
-        style={{
-          color: '#3D5278',
-          fontFamily: 'Inter, sans-serif',
-        }}
-      >
-        {label}
-      </p>
-
-      {/* Divider */}
-      <div
-        className="my-6"
-        style={{
-          borderTop: '1px solid #1E2D47',
-        }}
-      ></div>
-
-      {/* Features List */}
-      <ul className="space-y-4 mb-10">
+      <ul className="mt-8 flex-1 space-y-3">
         {tier.features.map((feature) => (
           <li
             key={feature}
-            className="text-sm flex items-start gap-3"
-            style={{
-              color: '#7A90B8',
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '14px',
-              lineHeight: '1.6',
-            }}
+            className={`flex items-start gap-3 text-sm leading-6 ${
+              tier.highlight ? "text-white/70" : "text-[#a7b8b4]"
+            }`}
           >
-            <span style={{ color: tier.accentColor, marginRight: '4px', marginTop: '2px', flexShrink: 0 }}>✓</span>
+            <span
+              className={`mt-1 flex size-5 shrink-0 items-center justify-center rounded-full ${
+                tier.highlight ? "bg-[#64d6c1] text-[#101014]" : "bg-[#0f8f7a]/10 text-[#0f8f7a]"
+              }`}
+            >
+              <Check className="size-3.5" />
+            </span>
             <span>{feature}</span>
           </li>
         ))}
       </ul>
 
-      {/* CTA Button */}
       <Link
-        href={`/sign-${tier.name === 'Free' ? 'up' : 'up'}`}
-        className={`block w-full py-3 rounded-lg font-medium text-center transition-all duration-200`}
-        style={{
-          background: tier.ctaStyle === 'solid' ? tier.accentColor : 'transparent',
-          color: tier.ctaStyle === 'solid' ? '#080B11' : tier.accentColor,
-          border: tier.ctaStyle === 'outline' ? `1px solid ${tier.accentColor}` : 'none',
-          fontFamily: 'Inter, sans-serif',
-          fontSize: '14px',
-        }}
-        onMouseEnter={(e) => {
-          const el = e.currentTarget as HTMLElement;
-          if (tier.ctaStyle === 'solid') {
-            el.style.boxShadow = `0 0 20px ${tier.accentColor}40`;
-          }
-        }}
-        onMouseLeave={(e) => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.boxShadow = 'none';
-        }}
+        href={href}
+        className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-[#64d6c1] px-5 py-3 text-sm font-semibold text-[#04100e] hover:bg-[#9ff3e3]"
       >
-        {tier.ctaText}
+        {tier.cta}
+        <ArrowRight className="size-4" />
       </Link>
     </div>
   );
@@ -250,116 +141,53 @@ export function PricingSection() {
   const [isYearly, setIsYearly] = useState(false);
 
   return (
-    <section id="pricing" className="w-full py-24 md:py-32" style={{ background: '#080B11' }}>
-      <div className="max-w-6xl mx-auto px-6">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <div
-            className="text-xs font-bold tracking-widest uppercase mb-4"
-            style={{ color: '#3D5278', fontFamily: 'JetBrains Mono, monospace' }}
-          >
-            PRICING
+    <section id="pricing" className="bg-[#050807] py-20 text-white md:py-28">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <p className="text-sm font-semibold text-[#64d6c1]">Pricing</p>
+            <h2 className="mt-4 text-4xl font-semibold leading-tight text-white md:text-5xl">
+              Start small. Upgrade when the workflow pays for itself.
+            </h2>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-[#a7b8b4]">
+              Clear plans for testing, daily solo work, and higher-volume teams.
+              Paid checkout runs through Stripe.
+            </p>
           </div>
 
-          <h2
-            className="mb-8"
-            style={{
-              fontSize: 'clamp(28px, 4vw, 48px)',
-              color: '#F0F4FF',
-              fontFamily: 'Syne, sans-serif',
-              fontWeight: 700,
-              lineHeight: 1.2,
-            }}
-          >
-            Simple pricing.
-            <br />
-            No surprises.
-          </h2>
+          <div className="inline-flex w-fit rounded-full border border-white/10 bg-[#0b1110] p-1 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setIsYearly(false)}
+              className={`rounded-full px-4 py-2 text-sm font-semibold ${
+                !isYearly ? "bg-[#64d6c1] text-[#04100e]" : "text-[#a7b8b4] hover:text-white"
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsYearly(true)}
+              className={`rounded-full px-4 py-2 text-sm font-semibold ${
+                isYearly ? "bg-[#64d6c1] text-[#04100e]" : "text-[#a7b8b4] hover:text-white"
+              }`}
+            >
+              Yearly
+            </button>
+          </div>
         </div>
 
-        {/* Monthly/Yearly Toggle */}
-        <div className="flex justify-center items-center gap-4 mb-16">
-          <span
-            style={{
-              color: isYearly ? '#3D5278' : '#F0F4FF',
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '14px',
-            }}
-          >
-            Monthly
-          </span>
-
-          <button
-            onClick={() => setIsYearly(!isYearly)}
-            className="relative w-12 h-6 rounded-full transition-all duration-300 border"
-            style={{
-              background: isYearly ? '#4F8EF7' : '#0E1420',
-              borderColor: isYearly ? '#4F8EF7' : '#1E2D47',
-            }}
-          >
-            <div
-              className="absolute top-1 w-4 h-4 rounded-full bg-white transition-transform duration-300"
-              style={{
-                transform: isYearly ? 'translateX(24px)' : 'translateX(2px)',
-              }}
-            ></div>
-          </button>
-
-          <span
-            style={{
-              color: isYearly ? '#F0F4FF' : '#3D5278',
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '14px',
-            }}
-          >
-            Yearly — save ~30%
-          </span>
-        </div>
-
-        {/* Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <div className="mt-12 grid gap-5 lg:grid-cols-3">
           {pricingTiers.map((tier) => (
             <PricingCard key={tier.name} tier={tier} isYearly={isYearly} />
           ))}
         </div>
 
-        {/* Trust Row */}
-        <div
-          className="flex flex-wrap justify-center items-center gap-3 text-xs text-center"
-          style={{
-            color: '#3D5278',
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '13px',
-          }}
-        >
-          <span>🔒 Secure checkout via Stripe</span>
-          <span>·</span>
-          <span>↩ 7-day refund policy</span>
-          <span>·</span>
-          <span>✦ Cancel anytime, no penalties</span>
+        <div className="mt-8 rounded-lg border border-white/10 bg-[#0b1110] p-5 text-sm leading-6 text-[#a7b8b4]">
+          Secure checkout via Stripe. Cancel from the customer portal. Free
+          users can test the core workflow before choosing a paid plan.
         </div>
       </div>
-
-      <style>{`
-        .scroll-reveal {
-          opacity: 0;
-          transform: translateY(24px);
-          transition: opacity 500ms ease, transform 500ms ease, all 300ms ease;
-        }
-
-        .scroll-reveal.revealed {
-          opacity: 1;
-          transform: translateY(0);
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .scroll-reveal {
-            opacity: 1;
-            transform: none;
-            transition: all 300ms ease;
-          }
-        }
-      `}</style>
     </section>
   );
 }

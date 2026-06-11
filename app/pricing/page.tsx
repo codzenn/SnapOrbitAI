@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Check, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
+import { BrandMark } from "@/components/BrandMark";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -146,7 +147,8 @@ function PricingContent() {
     <div className="min-h-screen bg-black text-white">
       <nav className="sticky top-0 z-50 border-b border-white/10 bg-black/40 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
-          <Link href="/" className="text-lg font-semibold tracking-tight text-white">
+          <Link href="/" className="flex items-center gap-3 text-lg font-semibold tracking-tight text-white">
+            <BrandMark className="size-9" />
             SnapOrbitAI
           </Link>
           <Button asChild variant="ghost" className="text-neutral-300 hover:bg-white/10 hover:text-white">

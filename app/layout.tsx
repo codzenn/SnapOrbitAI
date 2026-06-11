@@ -16,7 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "SnapOrbitAI",
-  description: "Upload, optimize, and prepare media assets with Cloudinary.",
+  description:
+    "Prepare images and videos with AI background removal, generative fill, captions, audits, search, and batch workflows.",
 };
 
 export default function RootLayout({

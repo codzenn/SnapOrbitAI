@@ -1,43 +1,39 @@
-'use client';
-
 export function SocialProofBar() {
+  const partners = ["Gemini", "Cloudinary", "Stripe", "Clerk", "Prisma", "Next.js"];
+  const metrics = [
+    { value: "Backgrounds", label: "removed by Cloudinary AI" },
+    { value: "Captions", label: "generated with Gemini vision" },
+    { value: "Search", label: "powered by semantic embeddings" },
+  ];
+
   return (
-    <section
-      className="w-full py-7 border-y"
-      style={{
-        background: '#0E1420',
-        borderColor: '#1E2D47',
-      }}
-    >
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="text-center mb-6" style={{ color: '#3D5278', fontFamily: 'Inter, sans-serif', fontSize: '13px' }}>
-          Built on reliable infrastructure you already trust
+    <section className="border-y border-white/10 bg-[#050807] py-10 text-white">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+          <div>
+            <p className="text-sm font-semibold text-[#64d6c1]">Trusted building blocks</p>
+            <p className="mt-2 max-w-md text-sm leading-6 text-[#a7b8b4]">
+              Built with the infrastructure creators already rely on, without
+              forcing your media workflow across five separate tabs.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            {metrics.map((item) => (
+              <div key={item.value} className="rounded-lg border border-white/10 bg-[#0b1110] p-4">
+                <p className="text-lg font-semibold text-white">{item.value}</p>
+                <p className="mt-1 text-sm leading-5 text-[#a7b8b4]">{item.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="flex flex-wrap justify-center items-center gap-12 md:gap-12 opacity-45">
-          <div style={{ color: '#4F8EF7', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '14px' }}>
-            Google Gemini
-          </div>
-          <div style={{ color: '#1E2D47' }}>|</div>
-
-          <div style={{ color: '#A855F7', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '14px' }}>
-            Cloudinary
-          </div>
-          <div style={{ color: '#1E2D47' }}>|</div>
-
-          <div style={{ color: '#F0F4FF', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '14px' }}>
-            Vercel
-          </div>
-          <div style={{ color: '#1E2D47' }}>|</div>
-
-          <div style={{ color: '#7A90B8', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '14px' }}>
-            Stripe
-          </div>
-          <div style={{ color: '#1E2D47' }}>|</div>
-
-          <div style={{ color: '#7A90B8', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '14px' }}>
-            Clerk
-          </div>
+        <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-white/10 pt-6">
+          {partners.map((partner) => (
+            <span key={partner} className="text-sm font-semibold text-white/60">
+              {partner}
+            </span>
+          ))}
         </div>
       </div>
     </section>

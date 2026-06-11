@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ArrowLeft, Crown, Camera, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Crown, ShieldCheck } from "lucide-react";
 import { SignIn } from "@clerk/nextjs";
+import { BrandMark } from "@/components/BrandMark";
 import { Button } from "@/components/ui/button";
 
 export default function Page() {
@@ -19,9 +20,7 @@ export default function Page() {
                 </Link>
               </Button>
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-white">
-                  <Camera className="size-6" />
-                </div>
+                <BrandMark className="size-12" />
                 <div>
                   <p className="text-xl font-bold tracking-tight text-white">SnapOrbitAI</p>
                   <p className="text-xs uppercase tracking-widest text-neutral-500">

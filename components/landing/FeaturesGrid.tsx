@@ -1,292 +1,125 @@
-'use client';
+import type { LucideIcon } from "lucide-react";
+import {
+  BadgeCheck,
+  Boxes,
+  Captions,
+  Eraser,
+  FileSearch,
+  Film,
+  Maximize2,
+  WandSparkles,
+} from "lucide-react";
 
-import React, { useRef, useEffect } from 'react';
-
-interface FeatureCardProps {
+type Feature = {
   title: string;
   description: string;
-  tag: string;
-  iconGradient: string;
-  icon: string;
-  gridSpan?: string;
-  gridRowSpan?: string;
-  delay: number;
-  specialContent?: React.ReactNode;
-}
+  detail: string;
+  icon: LucideIcon;
+  accent: string;
+};
 
-function FeatureCard({
-  title,
-  description,
-  tag,
-  iconGradient,
-  icon,
-  delay,
-  specialContent,
-}: FeatureCardProps) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && ref.current) {
-          ref.current.classList.add('revealed');
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current);
-      }
-    };
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      className="scroll-reveal rounded-lg border p-8 hover:border-[#2A3F5F] transition-all duration-200 cursor-pointer group flex flex-col h-full"
-      style={{
-        background: '#0E1420',
-        borderColor: '#1E2D47',
-        transitionDelay: `${delay}ms`,
-      }}
-      onMouseEnter={(e) => {
-        const el = e.currentTarget as HTMLElement;
-        el.style.boxShadow = '0 0 30px rgba(79, 142, 247, 0.07)';
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget as HTMLElement;
-        el.style.boxShadow = 'none';
-      }}
-    >
-      {/* Icon */}
-      <div
-        className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
-        style={{ background: iconGradient }}
-      >
-        {icon}
-      </div>
-
-      {/* Title */}
-      <h3
-        className="mt-6 font-semibold text-lg"
-        style={{ color: '#F0F4FF', fontFamily: 'Syne, sans-serif', fontSize: '18px', lineHeight: '1.3' }}
-      >
-        {title}
-      </h3>
-
-      {/* Description */}
-      <p
-        className="mt-3 text-sm leading-relaxed flex-grow"
-        style={{ color: '#7A90B8', fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: '1.7', letterSpacing: '0.2px' }}
-      >
-        {description}
-      </p>
-
-      {/* Special Content */}
-      {specialContent && <div className="mt-4">{specialContent}</div>}
-
-      {/* Tag */}
-      <div
-        className="mt-8 pt-4 border-t text-xs"
-        style={{ color: '#3D5278', borderColor: '#1E2D47', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px' }}
-      >
-        {tag}
-      </div>
-    </div>
-  );
-}
+const features: Feature[] = [
+  {
+    title: "Background removal",
+    description:
+      "Remove distracting backgrounds, preview the result, and keep the polished version with the original asset.",
+    detail: "Cloudinary AI",
+    icon: Eraser,
+    accent: "bg-[#0f8f7a]",
+  },
+  {
+    title: "Generative fill",
+    description:
+      "Expand images into square, vertical, and widescreen formats without rebuilding the creative from scratch.",
+    detail: "1:1, 4:5, 9:16, 16:9",
+    icon: Maximize2,
+    accent: "bg-[#2563eb]",
+  },
+  {
+    title: "AI captions",
+    description:
+      "Generate platform-ready captions, hooks, and hashtag ideas from the actual content in every image.",
+    detail: "Gemini vision",
+    icon: Captions,
+    accent: "bg-[#e0a800]",
+  },
+  {
+    title: "Quality audit",
+    description:
+      "Score composition, brightness, blur, and platform fit before a client or audience ever sees the asset.",
+    detail: "Actionable review",
+    icon: BadgeCheck,
+    accent: "bg-[#16a34a]",
+  },
+  {
+    title: "Batch processing",
+    description:
+      "Run the same AI operation across a whole drop of campaign images and download the outputs together.",
+    detail: "ZIP export",
+    icon: Boxes,
+    accent: "bg-[#ef4444]",
+  },
+  {
+    title: "Semantic search",
+    description:
+      "Find assets by mood, subject, color, or intent with natural-language search powered by embeddings.",
+    detail: "Vector matching",
+    icon: FileSearch,
+    accent: "bg-[#0891b2]",
+  },
+  {
+    title: "Video intelligence",
+    description:
+      "Analyze videos, generate captions, and convert aspect ratios inside the same workspace as your images.",
+    detail: "Video Studio",
+    icon: Film,
+    accent: "bg-[#111827]",
+  },
+  {
+    title: "Creator workspace",
+    description:
+      "Keep uploads, AI metadata, usage, and subscription controls together instead of managing scattered tools.",
+    detail: "One dashboard",
+    icon: WandSparkles,
+    accent: "bg-[#0f766e]",
+  },
+];
 
 export function FeaturesGrid() {
   return (
-    <section id="features" className="w-full py-24 md:py-32" style={{ background: '#080B11' }}>
-      <div className="max-w-6xl mx-auto px-6">
-        {/* Header */}
-        <div className="text-center mb-20">
-          <div
-            className="text-xs font-bold tracking-widest uppercase mb-4"
-            style={{ color: '#3D5278', fontFamily: 'JetBrains Mono, monospace' }}
-          >
-            THE FEATURE SET
+    <section id="features" className="bg-[#050807] py-20 text-white md:py-28">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
+          <div>
+            <p className="text-sm font-semibold text-[#64d6c1]">Feature suite</p>
+            <h2 className="mt-4 text-4xl font-semibold leading-tight text-white md:text-5xl">
+              Everything you need to prepare media for launch.
+            </h2>
           </div>
-
-          <h2
-            className="mb-8"
-            style={{
-              fontSize: 'clamp(28px, 4vw, 48px)',
-              color: '#F0F4FF',
-              fontFamily: 'Syne, sans-serif',
-              fontWeight: 700,
-              lineHeight: 1.2,
-            }}
-          >
-            Everything your media workflow needs.
-          </h2>
-
-          <p
-            className="mx-auto"
-            style={{
-              maxWidth: '620px',
-              color: '#7A90B8',
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '16px',
-              fontWeight: 400,
-              lineHeight: 1.75,
-              letterSpacing: '0.3px',
-            }}
-          >
-            Six focused tools. One workspace. No switching between apps.
+          <p className="max-w-2xl text-base leading-7 text-[#a7b8b4] lg:justify-self-end">
+            A single flow for cleanup, expansion, metadata, search, and billing.
+            It is intentionally focused: less tab hopping, more finished assets.
           </p>
         </div>
 
-        {/* Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-          {/* Card 1: Background Removal (6 cols, tall) */}
-          <div className="md:col-span-6 md:row-span-2">
-            <FeatureCard
-              title="Background Removal"
-              description="One click. Cloudinary AI isolates your subject instantly. Compare before and after with a drag slider."
-              tag="Cloudinary AI · Instant"
-              iconGradient="linear-gradient(135deg, #1A3A7A, #0E1420)"
-              icon="✂️"
-              gridSpan="col-span-6"
-              gridRowSpan="row-span-2"
-              delay={0}
-              specialContent={
-                <div className="flex gap-4 mt-4 items-center">
-                  <div
-                    className="flex-1 h-24 rounded-lg border"
-                    style={{
-                      borderColor: '#1E2D47',
-                      background: 'linear-gradient(135deg, #1A3A7A 0%, #0E1420 100%)',
-                    }}
-                  ></div>
-                  <div style={{ color: '#3D5278', fontSize: '12px' }}>→</div>
-                  <div
-                    className="flex-1 h-24 rounded-lg border"
-                    style={{
-                      borderColor: '#1E2D47',
-                      background: 'repeating-linear-gradient(45deg, #141C2E, #141C2E 10px, #0E1420 10px, #0E1420 20px)',
-                    }}
-                  ></div>
-                </div>
-              }
-            />
-          </div>
-
-          {/* Card 2: AI Captions (3 cols) */}
-          <div className="md:col-span-3">
-            <FeatureCard
-              title="AI Caption Generator"
-              description="Gemini reads your image and writes Instagram, LinkedIn, and Twitter captions. Plus 15 ranked hashtags."
-              tag="Gemini 2.5 Flash · Vision"
-              iconGradient="linear-gradient(135deg, #3B1F7A, #1A0E2E)"
-              icon="✦"
-              delay={80}
-            />
-          </div>
-
-          {/* Card 3: Quality Audit (3 cols) */}
-          <div className="md:col-span-3">
-            <FeatureCard
-              title="Quality Audit"
-              description="AI scores your image on composition, brightness, blur, and platform suitability before you post."
-              tag="Auto · Non-blocking"
-              iconGradient="linear-gradient(135deg, #1A3A1A, #0E1A0E)"
-              icon="◎"
-              delay={160}
-              specialContent={
-                <div className="flex flex-col gap-2 mt-4">
-                  <div className="flex items-baseline gap-2">
-                    <span style={{ color: '#22C55E', fontFamily: 'Syne, sans-serif', fontSize: '28px', fontWeight: 700 }}>
-                      8.4
-                    </span>
-                    <span style={{ color: '#3D5278', fontFamily: 'Inter, sans-serif', fontSize: '12px' }}>/10</span>
-                  </div>
-                  <div className="flex gap-2">
-                    {['Instagram', 'LinkedIn', 'Twitter'].map((platform) => (
-                      <div
-                        key={platform}
-                        className="text-xs px-2 py-1 rounded"
-                        style={{
-                          background: 'rgba(34, 197, 94, 0.15)',
-                          color: '#22C55E',
-                          fontFamily: 'Inter, sans-serif',
-                        }}
-                      >
-                        ✓ {platform}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              }
-            />
-          </div>
-
-          {/* Card 4: Generative Fill (4 cols) */}
-          <div className="md:col-span-4">
-            <FeatureCard
-              title="Generative Fill & Expand"
-              description="Extend any image to 1:1, 16:9, 9:16, or 4:5. Cloudinary AI fills the new space naturally."
-              tag="Cloudinary · 4 presets"
-              iconGradient="linear-gradient(135deg, #1A2A4A, #0E1420)"
-              icon="⤢"
-              delay={240}
-            />
-          </div>
-
-          {/* Card 5: Batch Processor (4 cols) */}
-          <div className="md:col-span-4">
-            <FeatureCard
-              title="Smart Batch Processor"
-              description="Upload 10 images. Apply BG removal, captions, and audit to all of them. Download as a single ZIP."
-              tag="Up to 25 images · ZIP export"
-              iconGradient="linear-gradient(135deg, #3A1A1A, #1A0E0E)"
-              icon="⚡"
-              delay={320}
-            />
-          </div>
-
-          {/* Card 6: Semantic Search (4 cols) */}
-          <div className="md:col-span-4">
-            <FeatureCard
-              title="Natural Language Search"
-              description="Type 'dark moody product photos' and find them. Powered by Gemini embeddings + cosine similarity."
-              tag="RAG · Vector search"
-              iconGradient="linear-gradient(135deg, #1A3A2A, #0E1A14)"
-              icon="⌕"
-              delay={400}
-            />
-          </div>
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {features.map((feature) => (
+            <article
+              key={feature.title}
+              className="group rounded-lg border border-white/10 bg-[#0b1110] p-5 transition hover:-translate-y-1 hover:border-[#64d6c1]/30 hover:bg-[#101816] hover:shadow-xl hover:shadow-black/20"
+            >
+              <div className={`flex size-11 items-center justify-center rounded-md text-white ${feature.accent}`}>
+                <feature.icon className="size-5" />
+              </div>
+              <h3 className="mt-5 text-lg font-semibold text-white">{feature.title}</h3>
+              <p className="mt-3 text-sm leading-6 text-[#a7b8b4]">{feature.description}</p>
+              <div className="mt-6 border-t border-white/10 pt-4 text-xs font-semibold text-[#64d6c1]">
+                {feature.detail}
+              </div>
+            </article>
+          ))}
         </div>
       </div>
-
-      <style>{`
-        .scroll-reveal {
-          opacity: 0;
-          transform: translateY(24px);
-          transition: opacity 500ms ease, transform 500ms ease, border-color 200ms, box-shadow 200ms;
-        }
-
-        .scroll-reveal.revealed {
-          opacity: 1;
-          transform: translateY(0);
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .scroll-reveal {
-            opacity: 1;
-            transform: none;
-            transition: border-color 200ms, box-shadow 200ms;
-          }
-        }
-      `}</style>
     </section>
   );
 }

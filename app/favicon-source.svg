@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="SnapOrbitAI content studio icon">
+  <defs>
+    <linearGradient id="bg" x1="20" x2="236" y1="18" y2="238" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#10231f"/>
+      <stop offset="0.5" stop-color="#07110f"/>
+      <stop offset="1" stop-color="#020504"/>
+    </linearGradient>
+    <linearGradient id="card" x1="70" x2="201" y1="70" y2="178" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9ff3e3"/>
+      <stop offset="0.48" stop-color="#64d6c1"/>
+      <stop offset="1" stop-color="#0f8f7a"/>
+    </linearGradient>
+    <filter id="glow" x="-35%" y="-35%" width="170%" height="170%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.39 0 0 0 0 0.84 0 0 0 0 0.76 0 0 0 0.55 0"/>
+      <feBlend in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="url(#bg)"/>
+  <rect x="56" y="77" width="118" height="96" rx="24" fill="#10231f" stroke="#64d6c1" stroke-width="12" opacity="0.78" transform="rotate(-10 115 125)"/>
+  <rect x="78" y="67" width="132" height="104" rx="28" fill="url(#card)" filter="url(#glow)"/>
+  <path d="M122 98v42l42-21-42-21z" fill="#04100e"/>
+  <path d="M94 151l26-30 25 30 20-20 29 36H94z" fill="#d7fff8" opacity="0.75"/>
+  <circle cx="102" cy="94" r="11" fill="#04100e" opacity="0.85"/>
+  <path d="M184 66c19 9 34 26 39 47" fill="none" stroke="#9ff3e3" stroke-width="15" stroke-linecap="round" opacity="0.88"/>
+  <path d="M196 188c-25 19-64 25-103 15" fill="none" stroke="#64d6c1" stroke-width="15" stroke-linecap="round" opacity="0.9"/>
+  <circle cx="190" cy="63" r="18" fill="#9ff3e3" filter="url(#glow)"/>
+  <circle cx="200" cy="189" r="15" fill="#64d6c1"/>
+</svg>

@@ -9,7 +9,6 @@ import {
   BarChart3,
   Boxes,
   ChevronDown,
-  CloudCog,
   FolderKanban,
   LogOutIcon,
   MenuIcon,
@@ -20,6 +19,7 @@ import {
   Maximize,
   UserCircle2,
 } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -91,9 +91,7 @@ function SidebarContent({
     <div className="flex h-full flex-col bg-black/40 border-r border-white/10 backdrop-blur-xl">
       <div className="border-b border-white/10 px-6 py-5">
         <Link href="/home" className="flex items-center gap-4" onClick={() => setSidebarOpen(false)}>
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
-            <CloudCog className="size-6" />
-          </div>
+          <BrandMark className="size-12" />
           <div>
             <p className="text-base font-semibold text-white">SnapOrbitAI</p>
             <p className="text-sm text-neutral-400">Media workspace</p>

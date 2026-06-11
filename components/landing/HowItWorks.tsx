@@ -1,176 +1,99 @@
-'use client';
+import Link from "next/link";
+import { ArrowRight, CheckCircle2, CreditCard, UploadCloud, WandSparkles } from "lucide-react";
 
-import React, { useRef, useEffect } from 'react';
-
-interface StepCardProps {
-  number: string;
-  title: string;
-  description: string;
-  delay: number;
-}
-
-function StepCard({ number, title, description, delay }: StepCardProps) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && ref.current) {
-          ref.current.classList.add('revealed');
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current);
-      }
-    };
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      className="scroll-reveal flex-1 rounded-lg border p-10 relative"
-      style={{
-        background: '#0E1420',
-        borderColor: '#1E2D47',
-        transitionDelay: `${delay}ms`,
-      }}
-    >
-      {/* Step number watermark */}
-      <div
-        className="absolute top-6 left-6 opacity-30"
-        style={{
-          fontSize: 'clamp(48px, 6vw, 72px)',
-          color: '#1E2D47',
-          fontFamily: 'Syne, sans-serif',
-          fontWeight: 800,
-          lineHeight: 1,
-        }}
-      >
-        {number}
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 mt-12">
-        <h3
-          className="font-semibold mb-5"
-          style={{ color: '#F0F4FF', fontFamily: 'Syne, sans-serif', fontSize: '20px', lineHeight: '1.3' }}
-        >
-          {title}
-        </h3>
-
-        <p
-          className="leading-relaxed"
-          style={{ color: '#7A90B8', fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.75, letterSpacing: '0.2px' }}
-        >
-          {description}
-        </p>
-      </div>
-    </div>
-  );
-}
+const steps = [
+  {
+    number: "01",
+    title: "Upload one asset or a full batch",
+    description:
+      "Bring in images and videos, then keep everything organized inside the same media library.",
+    icon: UploadCloud,
+  },
+  {
+    number: "02",
+    title: "Choose the AI work to run",
+    description:
+      "Remove backgrounds, expand a canvas, generate captions, audit quality, analyze video, or search by meaning.",
+    icon: WandSparkles,
+  },
+  {
+    number: "03",
+    title: "Review, download, and keep moving",
+    description:
+      "Compare outputs, check metadata, export the finished work, and upgrade only when the workflow fits.",
+    icon: CheckCircle2,
+  },
+];
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="w-full py-24 md:py-32" style={{ background: '#080B11' }}>
-      <div className="max-w-6xl mx-auto px-6">
-        {/* Header */}
-        <div className="text-center mb-20">
-          <div
-            className="text-xs font-bold tracking-widest uppercase mb-4"
-            style={{ color: '#3D5278', fontFamily: 'JetBrains Mono, monospace' }}
-          >
-            HOW IT WORKS
+    <section id="workflow" className="bg-[#050807] py-20 text-white md:py-28">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+          <div>
+            <p className="text-sm font-semibold text-[#64d6c1]">Workflow</p>
+            <h2 className="mt-4 text-4xl font-semibold leading-tight text-white md:text-5xl">
+              From upload to client-ready in three steps.
+            </h2>
+            <p className="mt-5 text-base leading-7 text-white/60">
+              The product is built around a simple rhythm: bring assets in,
+              run the right AI action, and leave with work that is ready to
+              post, pitch, or hand off.
+            </p>
+            <Link
+              href="/sign-up"
+              className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#64d6c1] px-5 py-3 text-sm font-semibold text-[#04100e] hover:bg-[#9ff3e3]"
+            >
+              Try the free workflow
+              <ArrowRight className="size-4" />
+            </Link>
           </div>
 
-          <h2
-            className="mb-8"
-            style={{
-              fontSize: 'clamp(28px, 4vw, 48px)',
-              color: '#F0F4FF',
-              fontFamily: 'Syne, sans-serif',
-              fontWeight: 700,
-              lineHeight: 1.2,
-            }}
-          >
-            Try every feature.
-            <br />
-            Free. Right now.
-          </h2>
-
-          <p
-            className="mx-auto"
-            style={{
-              maxWidth: '620px',
-              color: '#7A90B8',
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '16px',
-              fontWeight: 400,
-              lineHeight: 1.75,
-              letterSpacing: '0.3px',
-            }}
-          >
-            No credit card. No time limit. One trial use of every feature before you decide to upgrade.
-          </p>
+          <div className="grid gap-4">
+            {steps.map((step) => (
+              <article
+                key={step.number}
+                className="grid gap-5 rounded-lg border border-white/10 bg-[#0b1110] p-5 sm:grid-cols-[72px_1fr] sm:p-6"
+              >
+                <div className="flex size-14 items-center justify-center rounded-md bg-[#64d6c1] text-[#04100e]">
+                  <step.icon className="size-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-semibold text-[#64d6c1]">{step.number}</span>
+                    <span className="h-px flex-1 bg-white/10" />
+                  </div>
+                  <h3 className="mt-3 text-xl font-semibold text-white">{step.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-white/60">{step.description}</p>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
 
-        {/* Steps Container */}
-        <div className="flex flex-col md:flex-row gap-8 items-stretch">
-          {/* Arrow - visible only on desktop between cards */}
-          <div className="hidden md:flex items-center justify-center absolute left-1/3 top-1/2">
-            <div style={{ color: '#2A3F5F', fontSize: '24px' }}>→</div>
+        <div className="mt-12 rounded-lg border border-[#64d6c1]/30 bg-[#0b1110] p-5 text-white md:p-6">
+          <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
+            <div className="flex items-start gap-4">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-[#64d6c1] text-[#04100e]">
+                <CreditCard className="size-5" />
+              </span>
+              <div>
+                <h3 className="text-xl font-semibold">Start without a card.</h3>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-[#a7b8b4]">
+                  Every major feature has a free trial path, so you can test
+                  the real workflow before choosing Pro or Business.
+                </p>
+              </div>
+            </div>
+            <a
+              href="#pricing"
+              className="inline-flex items-center justify-center rounded-full bg-[#64d6c1] px-5 py-3 text-sm font-semibold text-[#04100e] hover:bg-[#9ff3e3]"
+            >
+              Compare plans
+            </a>
           </div>
-
-          <StepCard
-            number="01"
-            title="Sign up in seconds"
-            description="Create your account with email or Google. No credit card. No commitment. Your free trial starts immediately."
-            delay={0}
-          />
-
-          <StepCard
-            number="02"
-            title="Try every feature once"
-            description="Background removal, generative fill, AI captions, quality audit, batch processing, semantic search — try each once, completely free."
-            delay={80}
-          />
-
-          <StepCard
-            number="03"
-            title="Upgrade when it clicks"
-            description="When the workflow fits, move to Pro ($12/mo) for unlimited access. Or Business ($29/mo) for teams and analytics."
-            delay={160}
-          />
         </div>
       </div>
-
-      <style>{`
-        .scroll-reveal {
-          opacity: 0;
-          transform: translateY(24px);
-          transition: opacity 500ms ease, transform 500ms ease;
-        }
-
-        .scroll-reveal.revealed {
-          opacity: 1;
-          transform: translateY(0);
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .scroll-reveal {
-            opacity: 1;
-            transform: none;
-          }
-        }
-      `}</style>
     </section>
   );
 }
