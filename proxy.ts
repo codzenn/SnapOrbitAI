@@ -23,9 +23,8 @@ const isRedirectIfSignedInRoute = createRouteMatcher([
 const isPublicApiRoute = createRouteMatcher([
   "/api/videos",
   "/api/image-upload",
-  "/api/video-upload",
   "/api/auth/auto-logout",
-  "/api/webhook/razorpay",
+  "/api/stripe/webhook",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

@@ -385,7 +385,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   Video: 'Video',
-  PaymentAuditLog: 'PaymentAuditLog'
+  TrialUsage: 'TrialUsage',
+  Subscription: 'Subscription'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -401,7 +402,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "video" | "paymentAuditLog"
+    modelProps: "video" | "trialUsage" | "subscription"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -479,77 +480,151 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    PaymentAuditLog: {
-      payload: Prisma.$PaymentAuditLogPayload<ExtArgs>
-      fields: Prisma.PaymentAuditLogFieldRefs
+    TrialUsage: {
+      payload: Prisma.$TrialUsagePayload<ExtArgs>
+      fields: Prisma.TrialUsageFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.PaymentAuditLogFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentAuditLogPayload> | null
+          args: Prisma.TrialUsageFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialUsagePayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.PaymentAuditLogFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentAuditLogPayload>
+          args: Prisma.TrialUsageFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialUsagePayload>
         }
         findFirst: {
-          args: Prisma.PaymentAuditLogFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentAuditLogPayload> | null
+          args: Prisma.TrialUsageFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialUsagePayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.PaymentAuditLogFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentAuditLogPayload>
+          args: Prisma.TrialUsageFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialUsagePayload>
         }
         findMany: {
-          args: Prisma.PaymentAuditLogFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentAuditLogPayload>[]
+          args: Prisma.TrialUsageFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialUsagePayload>[]
         }
         create: {
-          args: Prisma.PaymentAuditLogCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentAuditLogPayload>
+          args: Prisma.TrialUsageCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialUsagePayload>
         }
         createMany: {
-          args: Prisma.PaymentAuditLogCreateManyArgs<ExtArgs>
+          args: Prisma.TrialUsageCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.PaymentAuditLogCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentAuditLogPayload>[]
+          args: Prisma.TrialUsageCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialUsagePayload>[]
         }
         delete: {
-          args: Prisma.PaymentAuditLogDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentAuditLogPayload>
+          args: Prisma.TrialUsageDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialUsagePayload>
         }
         update: {
-          args: Prisma.PaymentAuditLogUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentAuditLogPayload>
+          args: Prisma.TrialUsageUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialUsagePayload>
         }
         deleteMany: {
-          args: Prisma.PaymentAuditLogDeleteManyArgs<ExtArgs>
+          args: Prisma.TrialUsageDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.PaymentAuditLogUpdateManyArgs<ExtArgs>
+          args: Prisma.TrialUsageUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.PaymentAuditLogUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentAuditLogPayload>[]
+          args: Prisma.TrialUsageUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialUsagePayload>[]
         }
         upsert: {
-          args: Prisma.PaymentAuditLogUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PaymentAuditLogPayload>
+          args: Prisma.TrialUsageUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TrialUsagePayload>
         }
         aggregate: {
-          args: Prisma.PaymentAuditLogAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregatePaymentAuditLog>
+          args: Prisma.TrialUsageAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTrialUsage>
         }
         groupBy: {
-          args: Prisma.PaymentAuditLogGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.PaymentAuditLogGroupByOutputType>[]
+          args: Prisma.TrialUsageGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TrialUsageGroupByOutputType>[]
         }
         count: {
-          args: Prisma.PaymentAuditLogCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.PaymentAuditLogCountAggregateOutputType> | number
+          args: Prisma.TrialUsageCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TrialUsageCountAggregateOutputType> | number
+        }
+      }
+    }
+    Subscription: {
+      payload: Prisma.$SubscriptionPayload<ExtArgs>
+      fields: Prisma.SubscriptionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SubscriptionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SubscriptionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>
+        }
+        findFirst: {
+          args: Prisma.SubscriptionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SubscriptionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>
+        }
+        findMany: {
+          args: Prisma.SubscriptionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>[]
+        }
+        create: {
+          args: Prisma.SubscriptionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>
+        }
+        createMany: {
+          args: Prisma.SubscriptionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SubscriptionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>[]
+        }
+        delete: {
+          args: Prisma.SubscriptionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>
+        }
+        update: {
+          args: Prisma.SubscriptionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>
+        }
+        deleteMany: {
+          args: Prisma.SubscriptionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SubscriptionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SubscriptionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>[]
+        }
+        upsert: {
+          args: Prisma.SubscriptionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>
+        }
+        aggregate: {
+          args: Prisma.SubscriptionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSubscription>
+        }
+        groupBy: {
+          args: Prisma.SubscriptionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SubscriptionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SubscriptionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SubscriptionCountAggregateOutputType> | number
         }
       }
     }
@@ -601,29 +676,52 @@ export const VideoScalarFieldEnum = {
   compressedSize: 'compressedSize',
   duration: 'duration',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  userId: 'userId',
+  mediaType: 'mediaType',
+  aiDescription: 'aiDescription',
+  embedding: 'embedding',
+  aiCaptions: 'aiCaptions',
+  qualityScore: 'qualityScore',
+  videoSummary: 'videoSummary',
+  videoScenes: 'videoScenes',
+  videoMood: 'videoMood',
+  videoTopics: 'videoTopics',
+  videoHasAudio: 'videoHasAudio',
+  videoTranscript: 'videoTranscript',
+  videoCaptions: 'videoCaptions',
+  videoAspectRatioUrl: 'videoAspectRatioUrl',
+  videoCompressedUrl: 'videoCompressedUrl'
 } as const
 
 export type VideoScalarFieldEnum = (typeof VideoScalarFieldEnum)[keyof typeof VideoScalarFieldEnum]
 
 
-export const PaymentAuditLogScalarFieldEnum = {
+export const TrialUsageScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
-  provider: 'provider',
-  razorpayPaymentId: 'razorpayPaymentId',
-  razorpayOrderId: 'razorpayOrderId',
-  razorpaySubscriptionId: 'razorpaySubscriptionId',
-  razorpayCustomerId: 'razorpayCustomerId',
-  event: 'event',
-  plan: 'plan',
-  status: 'status',
-  amount: 'amount',
-  errorMessage: 'errorMessage',
-  createdAt: 'createdAt'
+  feature: 'feature',
+  count: 'count',
+  createdAt: 'createdAt',
+  lastUsedAt: 'lastUsedAt'
 } as const
 
-export type PaymentAuditLogScalarFieldEnum = (typeof PaymentAuditLogScalarFieldEnum)[keyof typeof PaymentAuditLogScalarFieldEnum]
+export type TrialUsageScalarFieldEnum = (typeof TrialUsageScalarFieldEnum)[keyof typeof TrialUsageScalarFieldEnum]
+
+
+export const SubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  stripeCustomerId: 'stripeCustomerId',
+  stripeSubscriptionId: 'stripeSubscriptionId',
+  plan: 'plan',
+  status: 'status',
+  currentPeriodEnd: 'currentPeriodEnd',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SubscriptionScalarFieldEnum = (typeof SubscriptionScalarFieldEnum)[keyof typeof SubscriptionScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -634,12 +732,29 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
 export const QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
 export const NullsOrder = {
@@ -699,6 +814,20 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 
 
 /**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+/**
  * Reference to a field of type 'Int'
  */
 export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -709,6 +838,13 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 /**
@@ -807,7 +943,8 @@ export type PrismaClientOptions = ({
 }
 export type GlobalOmitConfig = {
   video?: Prisma.VideoOmit
-  paymentAuditLog?: Prisma.PaymentAuditLogOmit
+  trialUsage?: Prisma.TrialUsageOmit
+  subscription?: Prisma.SubscriptionOmit
 }
 
 /* Types for Logging */

@@ -52,7 +52,8 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   Video: 'Video',
-  PaymentAuditLog: 'PaymentAuditLog'
+  TrialUsage: 'TrialUsage',
+  Subscription: 'Subscription'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -80,29 +81,52 @@ export const VideoScalarFieldEnum = {
   compressedSize: 'compressedSize',
   duration: 'duration',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  userId: 'userId',
+  mediaType: 'mediaType',
+  aiDescription: 'aiDescription',
+  embedding: 'embedding',
+  aiCaptions: 'aiCaptions',
+  qualityScore: 'qualityScore',
+  videoSummary: 'videoSummary',
+  videoScenes: 'videoScenes',
+  videoMood: 'videoMood',
+  videoTopics: 'videoTopics',
+  videoHasAudio: 'videoHasAudio',
+  videoTranscript: 'videoTranscript',
+  videoCaptions: 'videoCaptions',
+  videoAspectRatioUrl: 'videoAspectRatioUrl',
+  videoCompressedUrl: 'videoCompressedUrl'
 } as const
 
 export type VideoScalarFieldEnum = (typeof VideoScalarFieldEnum)[keyof typeof VideoScalarFieldEnum]
 
 
-export const PaymentAuditLogScalarFieldEnum = {
+export const TrialUsageScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
-  provider: 'provider',
-  razorpayPaymentId: 'razorpayPaymentId',
-  razorpayOrderId: 'razorpayOrderId',
-  razorpaySubscriptionId: 'razorpaySubscriptionId',
-  razorpayCustomerId: 'razorpayCustomerId',
-  event: 'event',
-  plan: 'plan',
-  status: 'status',
-  amount: 'amount',
-  errorMessage: 'errorMessage',
-  createdAt: 'createdAt'
+  feature: 'feature',
+  count: 'count',
+  createdAt: 'createdAt',
+  lastUsedAt: 'lastUsedAt'
 } as const
 
-export type PaymentAuditLogScalarFieldEnum = (typeof PaymentAuditLogScalarFieldEnum)[keyof typeof PaymentAuditLogScalarFieldEnum]
+export type TrialUsageScalarFieldEnum = (typeof TrialUsageScalarFieldEnum)[keyof typeof TrialUsageScalarFieldEnum]
+
+
+export const SubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  stripeCustomerId: 'stripeCustomerId',
+  stripeSubscriptionId: 'stripeSubscriptionId',
+  plan: 'plan',
+  status: 'status',
+  currentPeriodEnd: 'currentPeriodEnd',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SubscriptionScalarFieldEnum = (typeof SubscriptionScalarFieldEnum)[keyof typeof SubscriptionScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -113,12 +137,29 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
 export const QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
 export const NullsOrder = {

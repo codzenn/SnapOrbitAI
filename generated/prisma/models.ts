@@ -9,5 +9,6 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/Video'
-export type * from './models/PaymentAuditLog'
+export type * from './models/TrialUsage'
+export type * from './models/Subscription'
 export type * from './commonInputTypes'

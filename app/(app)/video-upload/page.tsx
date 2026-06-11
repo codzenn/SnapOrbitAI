@@ -1,44 +1,30 @@
 "use client";
 
-import axios from "axios";
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { CldImage } from "next-cloudinary";
 import { filesize } from "filesize";
-import { useUser } from "@clerk/nextjs";
-import Link from "next/link";
-import {
-  CircleAlert,
-  CloudUpload,
-  FileVideo,
-  Sparkles,
-  WandSparkles,
-  Crown,
-  Loader2
-} from "lucide-react";
+import { CircleAlert, CloudUpload, ImageIcon, Sparkles } from "lucide-react";
+import CaptionPanel from "@/components/ai/CaptionPanel";
+import QualityAuditCard from "@/components/ai/QualityAuditCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const VideoUpload = () => {
-  const { user, isLoaded } = useUser();
+export default function VideoUpload() {
   const [file, setFile] = useState<File | null>(null);
-  const [title, setTitle] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
+  const [assetId, setAssetId] = useState<string | null>(null);
+  const [publicId, setPublicId] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState("");
 
-  const router = useRouter();
-  const plan = user?.publicMetadata?.plan as string;
-  const isStarter = !plan || plan === "free";
-  const isPro = plan === "pro" || plan === "pro_plus";
-
-  const MAX_FILE_SIZE = 50 * 1024 * 1024;
-  const canSubmit = Boolean(file && title.trim() && !isUploading);
-  
   const uploadSummary = useMemo(() => {
-    if (!file) return null;
+    if (!file) {
+      return null;
+    }
+
     return {
       name: file.name,
       sizeLabel: filesize(file.size),
@@ -51,31 +37,37 @@ const VideoUpload = () => {
     setError("");
 
     if (!file) {
-      setError("Please select a video file to upload.");
-      return;
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      setError("File size is too large. Maximum allowed size is 50MB.");
+      setError("Please select an image to upload.");
       return;
     }
 
     setIsUploading(true);
+    setAssetId(null);
+    setPublicId(null);
+    setImageUrl(null);
+
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("originalSize", file.size.toString());
 
     try {
-      const response = await axios.post("/api/video-upload", formData);
-      if (response.status === 200) {
-        router.push("/home");
+      const response = await fetch("/api/image-upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Image upload failed.");
       }
-    } catch (err: any) {
+
+      setAssetId(data.assetId);
+      setPublicId(data.public_id);
+      setImageUrl(data.imageUrl);
+    } catch (uploadError) {
       setError(
-        err.response?.data?.error ||
-          "An error occurred while uploading the video. Please try again."
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Image upload failed.",
       );
     } finally {
       setIsUploading(false);
@@ -83,131 +75,102 @@ const VideoUpload = () => {
   };
 
   return (
-    <div className="grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
-      <Card className="bg-black/40 border-white/10 text-white backdrop-blur-sm">
-        <CardHeader className="space-y-3">
-          <div className="flex items-center gap-2 text-white">
-            <CloudUpload className="size-4" />
-            <span className="text-sm font-medium">Cloudinary uploader</span>
-          </div>
-          <CardTitle className="text-2xl font-semibold md:text-3xl">
-            Upload a new video.
-          </CardTitle>
-          <CardDescription className="max-w-2xl text-sm leading-6 text-neutral-400">
-            This form keeps the same backend flow and sends your file, title, description, and size to the current upload endpoint.
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          {error && (
-            <div className="flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-400 mb-6">
-              <CircleAlert className="size-5 shrink-0" />
-              <span className="text-sm font-medium">{error}</span>
+    <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+      <section className="space-y-6">
+        <Card className="border-white/10 bg-black/40 text-white backdrop-blur-sm">
+          <CardHeader className="space-y-3">
+            <div className="flex items-center gap-2 text-white">
+              <CloudUpload className="size-4" />
+              <span className="text-sm font-medium">SnapOrbit uploader</span>
             </div>
-          )}
-
-          {isStarter && isLoaded && (
-            <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-6 text-center mb-6">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/20 text-blue-400">
-                <Crown className="size-6" />
+            <CardTitle className="text-2xl font-semibold md:text-3xl">
+              Upload a single image
+            </CardTitle>
+            <CardDescription className="max-w-2xl text-sm leading-6 text-neutral-400">
+              Upload an image once, then generate AI captions, run a quality
+              audit, and prepare it for the rest of your asset library.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {error ? (
+              <div className="flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-400">
+                <CircleAlert className="size-5 shrink-0" />
+                <span className="text-sm font-medium">{error}</span>
               </div>
-              <h3 className="text-lg font-bold text-white">Creator Plan Limits Apply</h3>
-              <p className="mt-2 text-sm text-neutral-300">
-                You have 5 video uploads per month on the Creator plan. Upgrade to Studio for 100 uploads, or Production for unlimited access.
-              </p>
-              <Button asChild className="mt-4 bg-white text-black hover:bg-neutral-200">
-                <Link href="/pricing">View Pricing</Link>
-              </Button>
-            </div>
-          )}
+            ) : null}
 
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-6"
-          >
-            <div className="space-y-2">
-              <Label htmlFor="title" className="text-neutral-200">Video title</Label>
-              <Input
-                id="title"
-                type="text"
-                required
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                disabled={isUploading}
-                placeholder="Enter an engaging title"
-                className="bg-white/5 border-white/10 text-white placeholder:text-neutral-500 focus-visible:ring-white/20"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description" className="text-neutral-200">Description</Label>
-              <Textarea
-                id="description"
-                rows={5}
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                disabled={isUploading}
-                placeholder="Tell viewers what this video is about"
-                className="bg-white/5 border-white/10 text-white placeholder:text-neutral-500 focus-visible:ring-white/20"
-              />
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <Label htmlFor="file-upload" className="text-neutral-200">Video file</Label>
-                <span className="text-xs text-neutral-500">
-                  MP4, WebM, or OGG up to 50MB
-                </span>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="asset-upload" className="text-neutral-200">
+                  Image file
+                </Label>
+                <Input
+                  id="asset-upload"
+                  type="file"
+                  accept="image/*"
+                  disabled={isUploading}
+                  onChange={(event) => setFile(event.target.files?.[0] || null)}
+                  className="border-white/10 bg-white/5 text-white file:mr-2 file:rounded-md file:border-0 file:bg-white/10 file:px-2 file:py-1 file:text-sm file:font-medium file:text-white hover:file:bg-white/20"
+                />
               </div>
 
-              <Label 
-                htmlFor="file-upload"
-                className="flex cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-white/20 bg-white/5 px-6 py-10 text-center transition-colors hover:border-white/40 hover:bg-white/10"
+              <Button
+                type="submit"
+                disabled={!file || isUploading}
+                className="w-full bg-white text-black hover:bg-neutral-200 disabled:bg-white/20 disabled:text-white/50"
               >
-                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white/10 text-white">
-                  <FileVideo className="size-8" />
+                <CloudUpload className="mr-2 size-4" />
+                {isUploading ? "Uploading image..." : "Upload image"}
+              </Button>
+            </form>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              {isUploading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-[280px] w-full rounded-2xl bg-white/10" />
+                  <Skeleton className="h-4 w-48 bg-white/10" />
                 </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-white">Choose a source video</p>
+              ) : publicId ? (
+                <div className="space-y-4">
+                  <div className="relative aspect-video overflow-hidden rounded-2xl border border-white/10 bg-black/40">
+                    <CldImage
+                      src={publicId}
+                      alt="Uploaded asset preview"
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
                   <p className="text-sm text-neutral-400">
-                    Select a file to upload and compress with Cloudinary.
+                    Upload complete. AI captions and audit load automatically
+                    below.
                   </p>
                 </div>
-                <Input
-                  id="file-upload"
-                  name="file-upload"
-                  type="file"
-                  accept="video/*"
-                  className="hidden"
-                  onChange={(event) => setFile(event.target.files?.[0] || null)}
-                  disabled={isUploading}
-                />
-              </Label>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={!canSubmit}
-              className="w-full bg-white text-black hover:bg-neutral-200 disabled:bg-white/20 disabled:text-white/50"
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                  Uploading video...
-                </>
               ) : (
-                <>
-                  <CloudUpload className="mr-2 size-4" />
-                  Upload video
-                </>
+                <div className="flex min-h-[280px] flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-black/30 px-6 text-center">
+                  <ImageIcon className="mb-4 size-12 text-neutral-600" />
+                  <p className="text-lg font-semibold text-white">
+                    Your uploaded asset preview appears here
+                  </p>
+                  <p className="mt-2 max-w-md text-sm leading-6 text-neutral-400">
+                    Use JPG, PNG, or WEBP images to unlock captions, quality
+                    audit, and search indexing.
+                  </p>
+                </div>
               )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
+
+        {assetId && imageUrl ? (
+          <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+            <QualityAuditCard assetId={assetId} imageUrl={imageUrl} />
+            <CaptionPanel assetId={assetId} imageUrl={imageUrl} />
+          </div>
+        ) : null}
+      </section>
 
       <aside className="space-y-6">
-        <Card className="bg-black/40 border-white/10 text-white backdrop-blur-sm">
+        <Card className="border-white/10 bg-black/40 text-white backdrop-blur-sm">
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="rounded-2xl bg-white/10 p-3 text-white">
@@ -215,34 +178,32 @@ const VideoUpload = () => {
               </div>
               <div>
                 <CardTitle className="text-xl">Upload checklist</CardTitle>
-                <CardDescription className="text-neutral-400 mt-1">Keep the media pipeline clean and predictable</CardDescription>
+                <CardDescription className="mt-1 text-neutral-400">
+                  Keep every upload ready for downstream AI workflows.
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-neutral-300">
             <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-              Add a title for the upload.
+              Use a clear image with a visible subject.
             </div>
             <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-              Include a description if you need dashboard context.
+              Wait for AI captions and quality audit to finish after upload.
             </div>
             <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-              Choose a supported file up to 50MB.
+              The upload route also indexes the asset for natural language
+              search.
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-black/40 border-white/10 text-white backdrop-blur-sm">
+        <Card className="border-white/10 bg-black/40 text-white backdrop-blur-sm">
           <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-white/10 p-3 text-white">
-                <WandSparkles className="size-5" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">Selected media</CardTitle>
-                <CardDescription className="text-neutral-400 mt-1">Real file details from the chosen upload</CardDescription>
-              </div>
-            </div>
+            <CardTitle className="text-xl">Selected media</CardTitle>
+            <CardDescription className="text-neutral-400">
+              Real file details from your chosen upload
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {uploadSummary ? (
@@ -262,13 +223,15 @@ const VideoUpload = () => {
                   </div>
                   <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                     <p className="text-sm text-neutral-400">MIME type</p>
-                    <p className="mt-1 text-lg font-bold text-white">{uploadSummary.type}</p>
+                    <p className="mt-1 text-lg font-bold text-white">
+                      {uploadSummary.type}
+                    </p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-white/20 bg-white/5 p-6 text-sm leading-6 text-neutral-500 text-center">
-                Select a video file to show its real upload details here before you submit the form.
+              <div className="rounded-xl border border-dashed border-white/20 bg-white/5 p-6 text-center text-sm leading-6 text-neutral-500">
+                Select an image file to see its details before upload.
               </div>
             )}
           </CardContent>
@@ -276,6 +239,4 @@ const VideoUpload = () => {
       </aside>
     </div>
   );
-};
-
-export default VideoUpload;
+}

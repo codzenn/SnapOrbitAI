@@ -2,108 +2,92 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useClerk, useUser } from "@clerk/nextjs";
+import { toast } from "sonner";
 import {
+  BarChart3,
+  Boxes,
+  ChevronDown,
   CloudCog,
-  LayoutDashboardIcon,
+  FolderKanban,
   LogOutIcon,
   MenuIcon,
-  Share2Icon,
+  Sparkles,
   UploadIcon,
   Eraser,
+  Film,
   Maximize,
-  Scissors,
+  UserCircle2,
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
 const sidebarItems = [
   {
     href: "/home",
-    icon: LayoutDashboardIcon,
-    label: "Dashboard",
-    description: "Review your uploaded library",
+    icon: FolderKanban,
+    label: "Asset Library",
+    description: "Search and review your assets",
   },
   {
-    href: "/social-share",
-    icon: Share2Icon,
-    label: "Social Share",
-    description: "Resize images for each channel",
+    href: "/video-studio",
+    icon: Film,
+    label: "Video Studio",
+    description: "Analyze, caption, and convert videos",
   },
   {
     href: "/video-upload",
     icon: UploadIcon,
-    label: "Video Upload",
-    description: "Add new videos to Cloudinary",
+    label: "Upload Studio",
+    description: "Upload one image and run AI",
   },
   {
     href: "/ai-gen-expand",
     icon: Maximize,
-    label: "AI Expand",
+    label: "Gen Fill",
     description: "Generative fill missing pixels",
   },
   {
     href: "/ai-bg-removal",
     icon: Eraser,
-    label: "AI BG Removal",
+    label: "BG Removal",
     description: "Instantly remove backgrounds",
   },
   {
-    href: "/ai-reel-extraction",
-    icon: Scissors,
-    label: "AI Reel Extraction",
-    description: "Auto-extract highlights",
+    href: "/batch-process",
+    icon: Boxes,
+    label: "Batch Process",
+    description: "Run the same AI ops on many images",
+  },
+  {
+    href: "/analytics",
+    icon: BarChart3,
+    label: "Analytics",
+    description: "Track Business plan usage",
   },
 ];
 
-export default function AppLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const pathname = usePathname();
-  const { signOut } = useClerk();
-  const { user } = useUser();
-  
-  const currentItem = sidebarItems.find((item) => pathname === item.href) ?? sidebarItems[0];
-  const displayName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress || "Creator";
+interface SidebarContentProps {
+  pathname: string;
+  setSidebarOpen: (open: boolean) => void;
+  userPlan: unknown;
+}
 
-  const handleSignOut = async () => {
-    await signOut({ redirectUrl: "/" });
-  };
-
-  useEffect(() => {
-    const sendAutoLogout = () => {
-      try {
-        const payload = new Blob(["{}"], { type: "application/json" });
-        if (navigator.sendBeacon) {
-          navigator.sendBeacon("/api/auth/auto-logout", payload);
-          return;
-        }
-      } catch {
-        // ignore
-      }
-
-      fetch("/api/auth/auto-logout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: "{}",
-        keepalive: true,
-      }).catch(() => {});
-    };
-
-    window.addEventListener("pagehide", sendAutoLogout);
-    window.addEventListener("beforeunload", sendAutoLogout);
-
-    return () => {
-      window.removeEventListener("pagehide", sendAutoLogout);
-      window.removeEventListener("beforeunload", sendAutoLogout);
-    };
-  }, []);
-
-  const SidebarContent = () => (
+function SidebarContent({
+  pathname,
+  setSidebarOpen,
+  userPlan,
+}: SidebarContentProps) {
+  return (
     <div className="flex h-full flex-col bg-black/40 border-r border-white/10 backdrop-blur-xl">
       <div className="border-b border-white/10 px-6 py-5">
         <Link href="/home" className="flex items-center gap-4" onClick={() => setSidebarOpen(false)}>
@@ -153,10 +137,10 @@ export default function AppLayout({
           <div>
             <p className="text-[11px] text-neutral-500 font-semibold uppercase tracking-wider">Plan</p>
             <p className="text-sm font-bold text-white uppercase tracking-wide mt-0.5">
-              {user?.publicMetadata?.plan === "pro_plus" ? "PRODUCTION" : user?.publicMetadata?.plan === "pro" ? "STUDIO" : "CREATOR"}
+              {userPlan === "business" ? "BUSINESS" : userPlan === "pro" ? "PRO" : "FREE"}
             </p>
           </div>
-          {user?.publicMetadata?.plan !== "pro_plus" && (
+          {userPlan !== "business" && (
             <Button asChild variant="default" size="sm" className="rounded-full text-xs bg-white text-black hover:bg-neutral-200" onClick={() => setSidebarOpen(false)}>
               <Link href="/pricing">Upgrade</Link>
             </Button>
@@ -165,12 +149,119 @@ export default function AppLayout({
       </div>
     </div>
   );
+}
+
+export default function AppLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentPlan, setCurrentPlan] = useState("free");
+  const pathname = usePathname();
+  const router = useRouter();
+  const { signOut } = useClerk();
+  const { user } = useUser();
+  
+  const currentItem = sidebarItems.find((item) => pathname === item.href) ?? null;
+  const currentTitle = pathname === "/profile" ? "Profile" : currentItem?.label || "Workspace";
+  const displayName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress || "Creator";
+  const userEmail = user?.primaryEmailAddress?.emailAddress || "No email added";
+  const avatarFallback = displayName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "SO";
+
+  const handleSignOut = async () => {
+    await signOut({ redirectUrl: "/" });
+  };
+
+  useEffect(() => {
+    fetch("/api/subscription/current")
+      .then((response) => response.json())
+      .then((data) => setCurrentPlan(data.plan || "free"))
+      .catch(() => setCurrentPlan("free"));
+  }, [pathname]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const upgraded = params.get("upgraded");
+    const sessionId = params.get("session_id");
+
+    if (upgraded !== "true" || !sessionId) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const confirmCheckout = async () => {
+      try {
+        const response = await fetch("/api/stripe/confirm", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ sessionId }),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Could not confirm the upgraded plan.");
+        }
+
+        if (!cancelled && typeof data.plan === "string") {
+          setCurrentPlan(data.plan);
+          toast.success(
+            data.plan === "business"
+              ? "Business plan is active."
+              : data.plan === "pro"
+                ? "Pro plan is active."
+                : "Plan updated successfully.",
+            {
+              description:
+                "Payment succeeded and your workspace has been updated.",
+            },
+          );
+        }
+      } catch (error) {
+        console.error("[AppLayout] checkout confirmation failed:", error);
+        if (!cancelled) {
+          toast.error("Payment succeeded, but plan sync needs attention.", {
+            description:
+              error instanceof Error
+                ? error.message
+                : "Please refresh once or check your Stripe webhook setup.",
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          router.replace(pathname);
+        }
+      }
+    };
+
+    void confirmCheckout();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, router]);
 
   return (
     <div className="flex min-h-screen w-full bg-black text-white">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:block w-72 shrink-0 h-screen sticky top-0">
-        <SidebarContent />
+        <SidebarContent
+          pathname={pathname}
+          setSidebarOpen={setSidebarOpen}
+          userPlan={currentPlan}
+        />
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
@@ -186,7 +277,11 @@ export default function AppLayout({
                   </SheetTrigger>
                   <SheetContent side="left" className="p-0 w-72 bg-black border-r border-white/10 text-white">
                     <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                    <SidebarContent />
+                    <SidebarContent
+                      pathname={pathname}
+                      setSidebarOpen={setSidebarOpen}
+                      userPlan={currentPlan}
+                    />
                   </SheetContent>
                 </Sheet>
               </div>
@@ -196,30 +291,73 @@ export default function AppLayout({
                   SnapOrbitAI
                 </p>
                 <h1 className="text-lg font-semibold md:text-xl text-white">
-                  {currentItem.label}
+                  {currentTitle}
                 </h1>
+              </div>
+              <div className="hidden rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-neutral-300 lg:inline-flex lg:items-center lg:gap-2">
+                <Sparkles className="size-3.5" />
+                {currentPlan === "business" ? "Business" : currentPlan === "pro" ? "Pro" : "Free"}
               </div>
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="hidden text-right sm:block mr-2">
-                <p className="text-sm font-semibold leading-tight text-white">
-                  {displayName}
-                </p>
-                <p className="text-[11px] text-neutral-400 leading-tight">
-                  {user?.primaryEmailAddress?.emailAddress}
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleSignOut}
-                className="text-neutral-400 hover:bg-red-500/10 hover:text-red-500"
-                aria-label="Log out"
-                title="Log out"
-              >
-                <LogOutIcon className="size-5" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-2.5 py-2 text-left text-white outline-hidden transition hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/30"
+                  aria-label="Open account menu"
+                >
+                  <Avatar size="default" className="ring-1 ring-white/10">
+                    <AvatarImage src={user?.imageUrl} alt={displayName} />
+                    <AvatarFallback className="bg-white/10 text-white">
+                      {avatarFallback}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="hidden min-w-0 text-right sm:block">
+                    <p className="truncate text-sm font-semibold leading-tight text-white">
+                      {displayName}
+                    </p>
+                    <p className="truncate text-[11px] leading-tight text-neutral-400">
+                      {userEmail}
+                    </p>
+                  </div>
+                  <ChevronDown className="size-4 text-neutral-400" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={8}
+                  className="w-64 rounded-2xl border border-white/10 bg-zinc-950 p-2 text-white shadow-2xl"
+                >
+                  <div className="px-2 py-2">
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-white">{displayName}</p>
+                      <p className="truncate text-xs text-neutral-400">{userEmail}</p>
+                      <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-neutral-500">
+                        {currentPlan === "business"
+                          ? "Business plan"
+                          : currentPlan === "pro"
+                            ? "Pro plan"
+                            : "Free plan"}
+                      </p>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuItem
+                    className="cursor-pointer rounded-xl px-2 py-2 text-neutral-200 focus:bg-white/10 focus:text-white"
+                    onClick={() => router.push("/profile")}
+                  >
+                    <UserCircle2 className="size-4" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer rounded-xl px-2 py-2"
+                    variant="destructive"
+                    onClick={() => void handleSignOut()}
+                  >
+                    <LogOutIcon className="size-4" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>

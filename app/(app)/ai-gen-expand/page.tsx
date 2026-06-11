@@ -1,41 +1,137 @@
 "use client";
 
-import { useState } from "react";
-import { CldImage } from "next-cloudinary";
-import { useUser } from "@clerk/nextjs";
-import Link from "next/link";
-import {
-  Download,
-  ImagePlus,
-  Sparkles,
-  Wand2,
-  Maximize,
-  Loader2
-} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Download, ImagePlus, Maximize, Sparkles } from "lucide-react";
+import BeforeAfterSlider from "@/components/media/BeforeAfterSlider";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import UpgradeModal from "@/components/ui/UpgradeModal";
+
+const PRESETS = [
+  { label: "1:1 (Square)", ratio: "1:1" },
+  { label: "16:9 (Landscape)", ratio: "16:9" },
+  { label: "9:16 (Portrait)", ratio: "9:16" },
+  { label: "4:5 (Instagram)", ratio: "4:5" },
+];
+
+function getCloudinaryImageUrl(publicId: string, transformation?: string) {
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  if (!cloudName) {
+    return "";
+  }
+
+  const parts = ["https://res.cloudinary.com", cloudName, "image", "upload"];
+  if (transformation) {
+    parts.push(transformation);
+  }
+  parts.push(publicId);
+
+  return parts.join("/");
+}
 
 export default function AIGenExpand() {
-  const { user, isLoaded } = useUser();
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [selectedRatio, setSelectedRatio] = useState("16:9");
   const [isUploading, setIsUploading] = useState(false);
-  const [isTransforming, setIsTransforming] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isTrialLocked, setIsTrialLocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fileName, setFileName] = useState<string>("");
-  const [aspectRatio, setAspectRatio] = useState<string>("16:9");
+  const [fileName, setFileName] = useState("");
 
-  const plan = user?.publicMetadata?.plan as string;
-  const isEnterprise = plan === "pro_plus";
+  const originalUrl = useMemo(
+    () =>
+      uploadedImage
+        ? getCloudinaryImageUrl(uploadedImage, "f_auto,q_auto")
+        : "",
+    [uploadedImage],
+  );
+
+  const [expandedUrl, setExpandedUrl] = useState("");
+
+  const preloadImage = useCallback((src: string) => {
+    return new Promise<void>((resolve, reject) => {
+      const previewImage = new window.Image();
+      previewImage.onload = () => resolve();
+      previewImage.onerror = () =>
+        reject(new Error("AI could not finish the image expansion preview."));
+      previewImage.src = src;
+    });
+  }, []);
+
+  const loadExpandedPreview = useCallback(async () => {
+    if (!uploadedImage) {
+      setExpandedUrl("");
+      setIsGenerating(false);
+      return;
+    }
+
+    setIsGenerating(true);
+    setError(null);
+    setIsTrialLocked(false);
+
+    try {
+      const response = await fetch("/api/transform/gen-fill", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          publicId: uploadedImage,
+          aspectRatio: selectedRatio,
+          consume: false,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.error === "TRIAL_EXHAUSTED") {
+          setExpandedUrl("");
+          setIsTrialLocked(true);
+          return;
+        }
+
+        throw new Error(data.error || "Generative fill failed.");
+      }
+
+      const nextUrl = data.url || "";
+      if (!nextUrl) {
+        throw new Error("Generative fill preview is unavailable.");
+      }
+
+      await preloadImage(nextUrl);
+      setExpandedUrl(nextUrl);
+    } catch (previewError) {
+      setExpandedUrl("");
+      setError(
+        previewError instanceof Error
+          ? previewError.message
+          : "Generative fill failed.",
+      );
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [preloadImage, selectedRatio, uploadedImage]);
+
+  useEffect(() => {
+    void loadExpandedPreview();
+  }, [loadExpandedPreview]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     setFileName(file.name);
-    setIsUploading(true);
     setError(null);
+    setUploadedImage(null);
+    setExpandedUrl("");
+    setIsTrialLocked(false);
+    setIsUploading(true);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -45,7 +141,6 @@ export default function AIGenExpand() {
         method: "POST",
         body: formData,
       });
-
       const data = await response.json();
 
       if (!response.ok) {
@@ -53,175 +148,223 @@ export default function AIGenExpand() {
       }
 
       setUploadedImage(data.public_id);
-    } catch (err: any) {
-      setError(err.message || "Image upload failed. Please try again.");
+      setSelectedRatio("16:9");
+    } catch (uploadError) {
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Image upload failed. Please try again.",
+      );
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleImageDownload = () => {
-    if (!uploadedImage) return;
+  const handleDownload = async () => {
+    if (!uploadedImage || !expandedUrl) {
+      return;
+    }
 
-    setIsTransforming(true);
+    setIsDownloading(true);
+    setError(null);
 
-    const url = `https://res.cloudinary.com/${
-      process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
-    }/image/upload/c_pad,b_gen_fill,ar_${aspectRatio}/${uploadedImage}`;
+    try {
+      const transformResponse = await fetch("/api/transform/gen-fill", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          publicId: uploadedImage,
+          aspectRatio: selectedRatio,
+          consume: true,
+        }),
+      });
+      const transformData = await transformResponse.json();
 
-    fetch(url)
-      .then((response) => response.blob())
-      .then((blob) => {
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = downloadUrl;
-        link.download = `expanded-${aspectRatio.replace(":", "x")}-${fileName || "image"}.jpg`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(downloadUrl);
-      })
-      .catch(() => setError("Failed to download image."))
-      .finally(() => setIsTransforming(false));
+      if (!transformResponse.ok) {
+        if (transformData.error === "TRIAL_EXHAUSTED") {
+          setExpandedUrl("");
+          setIsTrialLocked(true);
+          return;
+        }
+
+        throw new Error(
+          transformData.error || "Failed to prepare the expanded image.",
+        );
+      }
+
+      const response = await fetch(transformData.url);
+      if (!response.ok) {
+        throw new Error("Failed to download the expanded image.");
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `expanded-${selectedRatio.replace(":", "x")}-${fileName || "image"}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (downloadError) {
+      setError(
+        downloadError instanceof Error
+          ? downloadError.message
+          : "Failed to download the expanded image.",
+      );
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
+  const showSkeleton = isUploading || isGenerating;
+
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-8 text-white">
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight">
-          AI Generative Expand
-        </h1>
-        <p className="mt-2 text-lg text-neutral-400">
-          Uncrop your images. AI seamlessly generates new pixels to change your aspect ratio without losing content.
-        </p>
-      </div>
-
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-sm relative">
-            {uploadedImage ? (
-              <div className="relative w-full h-full group">
-                <CldImage
-                  src={uploadedImage}
-                  alt="Expanded Image"
-                  fill
-                  className="object-contain p-4 z-10"
-                  crop="pad"
-                  aspectRatio={aspectRatio}
-                  fillBackground={{
-                    prompt: "natural seamless extension"
-                  }}
-                />
-              </div>
-            ) : (
-              <div className="text-center p-8">
-                <Maximize className="mx-auto mb-4 size-12 text-neutral-600" />
-                <p className="text-lg font-medium text-neutral-500">
-                  Upload an image to magically expand it
-                </p>
-              </div>
-            )}
+    <>
+      <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
+        <section className="space-y-6">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-extrabold tracking-tight text-white">
+              Generative Fill & Expand
+            </h1>
+            <p className="max-w-3xl text-sm leading-6 text-neutral-400">
+              Expand an image to a new aspect ratio, compare the original against
+              the generated result, and download the finished asset.
+            </p>
           </div>
-        </div>
 
-        <aside className="space-y-6">
-          <Card className="bg-black/40 border-white/10 text-white backdrop-blur-sm">
+          <Card className="border-white/10 bg-black/40 text-white backdrop-blur-sm">
             <CardContent className="p-6">
-              {!isEnterprise && isLoaded && (
-                <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-4 text-center mb-6">
-                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/20 text-blue-400">
-                    <Wand2 className="size-5" />
+              {showSkeleton ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-[360px] w-full rounded-2xl bg-white/10" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-52 bg-white/10" />
+                    <Skeleton className="h-4 w-80 bg-white/10" />
                   </div>
-                  <p className="text-sm font-bold text-white">Production Plan Required</p>
-                  <p className="mt-1 text-xs text-neutral-300">
-                    Unlock AI Generative Fill (Expand) with the Production plan.
+                  <p className="text-sm text-neutral-400">
+                    AI is expanding your image...
                   </p>
-                  <Button asChild size="sm" className="mt-3 bg-white text-black hover:bg-neutral-200">
-                    <Link href="/pricing">Upgrade to Production</Link>
-                  </Button>
+                </div>
+              ) : uploadedImage && originalUrl && expandedUrl ? (
+                <BeforeAfterSlider
+                  beforeSrc={originalUrl}
+                  afterSrc={expandedUrl}
+                  beforeAlt="Original upload"
+                  afterAlt="Expanded image result"
+                />
+              ) : (
+                <div className="flex min-h-[360px] flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/5 px-6 text-center">
+                  <Maximize className="mb-4 size-12 text-neutral-600" />
+                  <p className="text-lg font-semibold text-white">
+                    Upload an image to expand it
+                  </p>
+                  <p className="mt-2 max-w-md text-sm leading-6 text-neutral-400">
+                    Pick one of the aspect ratio presets and the generated result
+                    appears here with a before and after slider.
+                  </p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </section>
 
-              <div className={`space-y-6 ${!isEnterprise ? "opacity-50 pointer-events-none" : ""}`}>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-white">
-                    <ImagePlus className="size-5" />
-                    <h3 className="text-xl font-bold">Upload source image</h3>
-                  </div>
+        <aside className="space-y-6">
+          <Card className="border-white/10 bg-black/40 text-white backdrop-blur-sm">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="rounded-2xl bg-white/10 p-3 text-white">
+                  <ImagePlus className="size-5" />
                 </div>
-
-                <div className="space-y-2">
-                  <Label className="text-neutral-200">Image file</Label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    disabled={isUploading}
-                    className="bg-white/5 border-white/10 text-white file:text-white file:bg-white/10 file:border-0 hover:file:bg-white/20 file:rounded-md file:px-2 file:py-1 file:mr-2 file:text-sm file:font-medium"
-                  />
+                <div>
+                  <CardTitle className="text-xl">Upload and expand</CardTitle>
+                  <CardDescription className="mt-1 text-neutral-400">
+                    Aspect ratio presets update the generated preview instantly.
+                  </CardDescription>
                 </div>
-
-                {fileName && (
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm">
-                    <p className="font-semibold text-neutral-200">Selected file</p>
-                    <p className="mt-1 break-all text-neutral-400">{fileName}</p>
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label className="text-neutral-200">Target Ratio</Label>
-                  <select
-                    value={aspectRatio}
-                    onChange={(e) => setAspectRatio(e.target.value)}
-                    className="flex h-10 w-full items-center justify-between rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={!uploadedImage}
-                  >
-                    <option value="16:9" className="bg-black text-white">Landscape (16:9)</option>
-                    <option value="1:1" className="bg-black text-white">Square (1:1)</option>
-                    <option value="4:5" className="bg-black text-white">Portrait (4:5)</option>
-                    <option value="9:16" className="bg-black text-white">Vertical (9:16)</option>
-                  </select>
-                </div>
-
-                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                  <div className="mb-2 flex items-center gap-2 text-green-400">
-                    <Sparkles className="size-4" />
-                    <p className="font-semibold text-white">AI Generative Fill</p>
-                  </div>
-                  <p className="text-sm leading-6 text-neutral-400">
-                    The AI analyzes the content and context of your image to seamlessly paint in the missing edges.
-                  </p>
-                </div>
-
-                {error && (
-                  <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
-                    {error}
-                  </div>
-                )}
-
-                {isUploading && (
-                  <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3 text-sm text-blue-400 flex items-center gap-2">
-                    <Loader2 className="size-4 animate-spin" />
-                    Uploading image to Cloudinary...
-                  </div>
-                )}
-
-                <Button
-                  onClick={handleImageDownload}
-                  disabled={!uploadedImage || isTransforming || isUploading}
-                  className="w-full bg-white text-black hover:bg-neutral-200 disabled:bg-white/20 disabled:text-white/50"
-                >
-                  {isTransforming ? (
-                    <><Loader2 className="mr-2 size-4 animate-spin" /> Generating pixels...</>
-                  ) : (
-                    <><Download className="mr-2 size-4" /> Download expanded image</>
-                  )}
-                </Button>
               </div>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="expand-image" className="text-neutral-200">
+                  Image file
+                </Label>
+                <Input
+                  id="expand-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  disabled={isUploading || isDownloading}
+                  className="border-white/10 bg-white/5 text-white file:mr-2 file:rounded-md file:border-0 file:bg-white/10 file:px-2 file:py-1 file:text-sm file:font-medium file:text-white hover:file:bg-white/20"
+                />
+              </div>
+
+              {fileName ? (
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm">
+                  <p className="font-semibold text-white">Selected file</p>
+                  <p className="mt-1 break-all text-neutral-400">{fileName}</p>
+                </div>
+              ) : null}
+
+              <div className="space-y-3">
+                <Label className="text-neutral-200">Aspect ratio presets</Label>
+                <div className="grid gap-2">
+                  {PRESETS.map((preset) => (
+                    <Button
+                      key={preset.ratio}
+                      type="button"
+                      variant={selectedRatio === preset.ratio ? "default" : "outline"}
+                      onClick={() => setSelectedRatio(preset.ratio)}
+                      disabled={!uploadedImage || isUploading || isGenerating}
+                      className={
+                        selectedRatio === preset.ratio
+                          ? "justify-start bg-white text-black hover:bg-neutral-200"
+                          : "justify-start border-white/15 bg-transparent text-white hover:bg-white/10"
+                      }
+                    >
+                      {preset.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="mb-2 flex items-center gap-2 text-green-400">
+                  <Sparkles className="size-4" />
+                  <p className="font-semibold text-white">What happens next</p>
+                </div>
+                <p className="text-sm leading-6 text-neutral-400">
+                  Cloudinary generative fill extends the image edges to match the
+                  selected ratio while keeping the main subject centered.
+                </p>
+              </div>
+
+              {error ? (
+                <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
+                  {error}
+                </div>
+              ) : null}
+
+              <Button
+                onClick={handleDownload}
+                disabled={!expandedUrl || showSkeleton || isDownloading}
+                className="w-full bg-white text-black hover:bg-neutral-200 disabled:bg-white/20 disabled:text-white/50"
+              >
+                <Download className="mr-2 size-4" />
+                {isDownloading ? "Preparing download..." : "Download expanded image"}
+              </Button>
             </CardContent>
           </Card>
         </aside>
       </div>
-    </div>
+
+      <UpgradeModal
+        open={isTrialLocked}
+        featureName="Generative Fill"
+        onOpenChange={setIsTrialLocked}
+      />
+    </>
   );
 }

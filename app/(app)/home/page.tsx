@@ -2,104 +2,174 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import axios from "axios";
 import { filesize } from "filesize";
-import { useAuth } from "@clerk/nextjs";
 import {
   CircleAlert,
   CloudUpload,
+  Eraser,
+  ImageIcon,
   RefreshCcw,
-  Share2,
-  VideoIcon,
-  CheckCircle2,
-  XCircle,
+  Search,
+  Sparkles,
 } from "lucide-react";
-import VideoCard from "@/components/VideoCard";
 import { Video } from "@/generated/prisma/client";
+import SearchBar from "@/components/ai/SearchBar";
+import AssetDetailDrawer from "@/components/media/AssetDetailDrawer";
+import { getAssetPreviewUrl } from "@/lib/cloudinary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import UpgradeModal from "@/components/ui/UpgradeModal";
+
+type FilterKey = "all" | "images" | "videos" | "high" | "review";
+type AssetRecord = Omit<Video, "createdAt" | "updatedAt"> & {
+  createdAt: string | Date;
+  updatedAt: string | Date;
+};
+type SearchResultRecord = {
+  id: string;
+  title: string;
+  description: string | null;
+  publicId: string;
+  originalSize: string;
+  compressedSize: string;
+  duration: number;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+  mediaType: string;
+  aiDescription: string | null;
+  embedding: string | null;
+  aiCaptions: unknown;
+  qualityScore: number | null;
+};
+
+const FILTERS: { key: FilterKey; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "images", label: "Images" },
+  { key: "videos", label: "Videos" },
+  { key: "high", label: "High Quality" },
+  { key: "review", label: "Needs Review" },
+];
+
+function getQualityTone(score: number | null) {
+  if (score === null) {
+    return "bg-white/10 text-neutral-300 border-white/10";
+  }
+
+  if (score >= 8) {
+    return "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
+  }
+
+  if (score >= 5) {
+    return "bg-yellow-500/15 text-yellow-300 border-yellow-500/30";
+  }
+
+  return "bg-red-500/15 text-red-300 border-red-500/30";
+}
+
+function getQualityLabel(score: number | null) {
+  if (score === null) {
+    return "Audit not run";
+  }
+
+  return `Score ${score}`;
+}
 
 function Home() {
-  const { isLoaded, isSignedIn, getToken } = useAuth();
-  const [videos, setVideos] = useState<Video[]>([]);
+  const [assets, setAssets] = useState<AssetRecord[]>([]);
+  const [searchResults, setSearchResults] = useState<AssetRecord[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [billingStatus, setBillingStatus] = useState<"success" | "cancelled" | null>(null);
+  const [trialLocked, setTrialLocked] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
+  const [selectedAsset, setSelectedAsset] = useState<AssetRecord | null>(null);
 
-  const fetchVideos = useCallback(async () => {
-    if (!isLoaded) return;
-    if (!isSignedIn) {
-      setLoading(false);
-      setVideos([]);
-      setError(null);
-      return;
-    }
-
+  const fetchAssets = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const token = await getToken();
-      const response = await axios.get("/api/videos", {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
+      const response = await fetch("/api/videos");
+      const data = await response.json();
 
-      if (Array.isArray(response.data)) {
-        setVideos(response.data);
-      } else {
-        throw new Error("Unexpected response format");
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch assets");
       }
-    } catch {
-      setError("Failed to fetch videos");
+
+      setAssets(Array.isArray(data) ? data : []);
+    } catch (fetchError) {
+      setError(
+        fetchError instanceof Error ? fetchError.message : "Failed to fetch assets",
+      );
     } finally {
       setLoading(false);
     }
-  }, [getToken, isLoaded, isSignedIn]);
-
-  useEffect(() => {
-    fetchVideos();
-    
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const billing = params.get("billing");
-      if (billing === "success") {
-        setBillingStatus("success");
-      } else if (billing === "cancelled") {
-        setBillingStatus("cancelled");
-      }
-      
-      if (billing) {
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    }
-  }, [fetchVideos]);
-
-  const handleDownload = useCallback((url: string, title: string) => {
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `${title}.mp4`);
-    link.setAttribute("target", "_blank");
-    link.setAttribute("rel", "noopener noreferrer");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   }, []);
 
+  useEffect(() => {
+    fetchAssets();
+  }, [fetchAssets]);
+
+  const handleSearchResults = useCallback((results: AssetRecord[]) => {
+    setTrialLocked(false);
+    setSearchResults(results);
+  }, []);
+
+  const handleSearchBarResults = useCallback(
+    (results: SearchResultRecord[]) => {
+      handleSearchResults(results as unknown as AssetRecord[]);
+    },
+    [handleSearchResults],
+  );
+
+  const handleSearchTrialExhausted = useCallback(() => {
+    setTrialLocked(true);
+    setError(null);
+  }, []);
+
+  const handleSearchClear = useCallback(() => {
+    setSearchResults(null);
+    setTrialLocked(false);
+  }, []);
+
+  const sourceAssets = searchResults ?? assets;
+  const filteredAssets = useMemo(() => {
+    switch (activeFilter) {
+      case "images":
+        return sourceAssets.filter((asset) => asset.mediaType === "image");
+      case "videos":
+        return sourceAssets.filter((asset) => asset.mediaType === "video");
+      case "high":
+        return sourceAssets.filter((asset) => (asset.qualityScore ?? 0) >= 7);
+      case "review":
+        return sourceAssets.filter((asset) => (asset.qualityScore ?? 10) < 5);
+      default:
+        return sourceAssets;
+    }
+  }, [activeFilter, sourceAssets]);
+
   const metrics = useMemo(() => {
-    const totalOriginal = videos.reduce((sum, video) => sum + Number(video.originalSize), 0);
-    const totalCompressed = videos.reduce((sum, video) => sum + Number(video.compressedSize), 0);
-    const totalDuration = videos.reduce((sum, video) => sum + video.duration, 0);
-    const averageCompression = totalOriginal > 0 ? Math.round(((totalOriginal - totalCompressed) / totalOriginal) * 100) : 0;
+    const totalOriginal = assets.reduce(
+      (sum, asset) => sum + Number(asset.originalSize),
+      0,
+    );
+    const totalCompressed = assets.reduce(
+      (sum, asset) => sum + Number(asset.compressedSize),
+      0,
+    );
 
     return {
-      count: videos.length,
+      count: assets.length,
+      imageCount: assets.filter((asset) => asset.mediaType === "image").length,
+      videoCount: assets.filter((asset) => asset.mediaType === "video").length,
+      highQualityCount: assets.filter((asset) => (asset.qualityScore ?? 0) >= 7)
+        .length,
       totalOriginal,
       totalCompressed,
-      totalDuration,
-      averageCompression,
     };
-  }, [videos]);
+  }, [assets]);
 
   if (loading) {
     return (
@@ -120,37 +190,12 @@ function Home() {
 
   return (
     <div className="space-y-8">
-      {billingStatus === "success" && (
-        <div className="flex items-start gap-4 rounded-2xl border border-green-500/20 bg-green-500/10 p-4 text-green-400 shadow-sm">
-          <CheckCircle2 className="mt-0.5 size-5 shrink-0" />
-          <div className="flex flex-1 flex-col gap-1">
-            <h3 className="font-bold">Subscription updated successfully!</h3>
-            <p className="text-sm opacity-90">Your account has been upgraded. You now have access to premium features.</p>
-          </div>
-          <Button variant="ghost" size="icon" onClick={() => setBillingStatus(null)} className="h-6 w-6 text-green-400 hover:bg-green-500/20">
-            <XCircle className="size-4" />
-          </Button>
-        </div>
-      )}
-
-      {billingStatus === "cancelled" && (
-        <div className="flex items-start gap-4 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-yellow-400 shadow-sm">
-          <CircleAlert className="mt-0.5 size-5 shrink-0" />
-          <div className="flex flex-1 flex-col gap-1">
-            <h3 className="font-bold">Payment cancelled</h3>
-            <p className="text-sm opacity-90">The checkout process was cancelled. Your subscription has not been changed.</p>
-          </div>
-          <Button variant="ghost" size="icon" onClick={() => setBillingStatus(null)} className="h-6 w-6 text-yellow-400 hover:bg-yellow-500/20">
-            <XCircle className="size-4" />
-          </Button>
-        </div>
-      )}
-
       <section className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="space-y-2">
-          <h2 className="text-2xl font-semibold md:text-3xl">Media library</h2>
+          <h2 className="text-2xl font-semibold md:text-3xl">Asset Library</h2>
           <p className="max-w-2xl text-sm leading-6 text-neutral-400">
-            Review uploaded videos, compare compression results, and jump into your next upload or social export.
+            Search your uploads in plain English, review AI metadata, and open
+            every asset in a dedicated detail drawer.
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -161,38 +206,48 @@ function Home() {
             </Link>
           </Button>
           <Button asChild variant="outline" className="gap-2 border-white/20 bg-transparent text-white hover:bg-white/10">
-            <Link href="/social-share">
-              Social formatter
-              <Share2 className="size-4" />
+            <Link href="/ai-bg-removal">
+              Remove background
+              <Eraser className="size-4" />
             </Link>
           </Button>
         </div>
       </section>
+
+      <SearchBar
+        onResults={handleSearchBarResults}
+        onSearchingChange={setIsSearching}
+        onError={setError}
+        onTrialExhausted={handleSearchTrialExhausted}
+        onClear={handleSearchClear}
+      />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card className="bg-black/40 border-white/10 text-white backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-neutral-400">Library size</CardTitle>
             <div className="rounded-lg bg-blue-500/10 p-2 text-blue-400">
-              <VideoIcon className="size-4" />
+              <Search className="size-4" />
             </div>
           </CardHeader>
           <CardContent>
             <h3 className="text-3xl font-bold tracking-tight">{metrics.count}</h3>
-            <p className="text-xs text-neutral-500 mt-1">Videos currently stored</p>
+            <p className="text-xs text-neutral-500 mt-1">Assets currently stored</p>
           </CardContent>
         </Card>
 
         <Card className="bg-black/40 border-white/10 text-white backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-neutral-400">Original footprint</CardTitle>
+            <CardTitle className="text-sm font-medium text-neutral-400">Images vs videos</CardTitle>
             <div className="rounded-lg bg-purple-500/10 p-2 text-purple-400">
-              <CloudUpload className="size-4" />
+              <ImageIcon className="size-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <h3 className="text-3xl font-bold tracking-tight">{filesize(metrics.totalOriginal || 0)}</h3>
-            <p className="text-xs text-neutral-500 mt-1">Before Cloudinary optimization</p>
+            <h3 className="text-3xl font-bold tracking-tight">
+              {metrics.imageCount} / {metrics.videoCount}
+            </h3>
+            <p className="text-xs text-neutral-500 mt-1">Images and videos in your library</p>
           </CardContent>
         </Card>
 
@@ -213,16 +268,36 @@ function Home() {
 
         <Card className="bg-black/40 border-white/10 text-white backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-neutral-400">Average reduction</CardTitle>
+            <CardTitle className="text-sm font-medium text-neutral-400">High quality assets</CardTitle>
             <div className="rounded-lg bg-emerald-500/10 p-2 text-emerald-400">
-              <RefreshCcw className="size-4" />
+              <Sparkles className="size-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <h3 className="text-3xl font-bold tracking-tight text-green-400">{metrics.averageCompression}%</h3>
-            <p className="text-xs text-neutral-500 mt-1">{Math.round(metrics.totalDuration / 60)} minutes of video tracked</p>
+            <h3 className="text-3xl font-bold tracking-tight text-green-400">
+              {metrics.highQualityCount}
+            </h3>
+            <p className="text-xs text-neutral-500 mt-1">Assets with quality score 7 or above</p>
           </CardContent>
         </Card>
+      </section>
+
+      <section className="flex flex-wrap gap-3">
+        {FILTERS.map((filter) => (
+          <Button
+            key={filter.key}
+            type="button"
+            variant={activeFilter === filter.key ? "default" : "outline"}
+            onClick={() => setActiveFilter(filter.key)}
+            className={
+              activeFilter === filter.key
+                ? "bg-white text-black hover:bg-neutral-200"
+                : "border-white/15 bg-transparent text-white hover:bg-white/10"
+            }
+          >
+            {filter.label}
+          </Button>
+        ))}
       </section>
 
       {error && (
@@ -231,22 +306,32 @@ function Home() {
             <CircleAlert className="size-5" />
             <span>{error}</span>
           </div>
-          <Button variant="outline" size="sm" onClick={fetchVideos} className="border-red-500/30 hover:bg-red-500/20 text-red-400">
+          <Button variant="outline" size="sm" onClick={fetchAssets} className="border-red-500/30 hover:bg-red-500/20 text-red-400">
             Retry
           </Button>
         </div>
       )}
 
-      {videos.length === 0 ? (
+      {isSearching ? (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3">
+          {[...Array(6)].map((_, index) => (
+            <Skeleton
+              key={index}
+              className="h-[320px] rounded-[2rem] bg-neutral-800/50"
+            />
+          ))}
+        </div>
+      ) : assets.length === 0 ? (
         <Card className="bg-black/40 border-white/10 text-center p-12 text-white backdrop-blur-sm">
           <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white/10 text-white">
-              <VideoIcon className="size-8" />
+              <ImageIcon className="size-8" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-2xl font-bold">No videos uploaded yet</h3>
+              <h3 className="text-2xl font-bold">No assets uploaded yet</h3>
               <p className="text-base leading-7 text-neutral-400">
-                Your dashboard is connected and ready. Upload the first video to populate the media library with real Cloudinary data.
+                Upload your first image to start generating captions, quality
+                audits, and searchable asset metadata.
               </p>
             </div>
             <Button asChild className="bg-white text-black hover:bg-neutral-200 mt-4">
@@ -254,26 +339,115 @@ function Home() {
             </Button>
           </div>
         </Card>
+      ) : filteredAssets.length === 0 ? (
+        <Card className="bg-black/40 border-white/10 p-12 text-center text-white backdrop-blur-sm">
+          <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white/10 text-white">
+              <Search className="size-8" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-bold">No matching assets found</h3>
+              <p className="text-base leading-7 text-neutral-400">
+                No matching images found. Try describing what&apos;s in the image
+                - colors, subjects, or mood.
+              </p>
+            </div>
+          </div>
+        </Card>
       ) : (
         <Card className="bg-black/40 border-white/10 p-6 text-white backdrop-blur-sm">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between mb-6">
             <div>
-              <h3 className="text-xl font-semibold">Recent uploads</h3>
-              <p className="text-sm text-neutral-400 mt-1">Hover over a card to preview the generated Cloudinary clip.</p>
+              <h3 className="text-xl font-semibold">Your assets</h3>
+              <p className="text-sm text-neutral-400 mt-1">
+                Click any card to open the detail drawer with AI captions and
+                quality metadata.
+              </p>
             </div>
-            <Button variant="outline" size="sm" onClick={fetchVideos} className="gap-2 border-white/20 bg-transparent text-white hover:bg-white/10">
-              <RefreshCcw className="size-3.5" />
+            <Button variant="outline" size="sm" onClick={fetchAssets} className="gap-2 border-white/20 bg-transparent text-white hover:bg-white/10">
               Refresh data
             </Button>
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3">
-            {videos.map((video) => (
-              <VideoCard key={video.id} video={video} onDownload={handleDownload} />
+            {filteredAssets.map((asset) => (
+              <button
+                key={asset.id}
+                type="button"
+                onClick={() => setSelectedAsset(asset)}
+                className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 text-left transition hover:border-white/20 hover:bg-white/[0.07]"
+              >
+                <div className="relative aspect-video overflow-hidden bg-black/30">
+                  {asset.mediaType === "video" ? (
+                    <video
+                      src={getAssetPreviewUrl(asset.publicId, asset.mediaType)}
+                      className="h-full w-full object-cover"
+                      muted
+                      playsInline
+                    />
+                  ) : (
+                    <img
+                      src={getAssetPreviewUrl(asset.publicId, asset.mediaType)}
+                      alt={asset.title}
+                      className="h-full w-full object-cover"
+                    />
+                  )}
+
+                  <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4">
+                    <div className="rounded-full bg-black/65 px-3 py-1 text-xs font-medium text-white">
+                      {asset.mediaType}
+                    </div>
+                    <div
+                      className={`rounded-full border px-3 py-1 text-xs font-medium ${getQualityTone(
+                        asset.qualityScore,
+                      )}`}
+                    >
+                      {getQualityLabel(asset.qualityScore)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 p-5">
+                  <div className="space-y-1">
+                    <p className="text-base font-semibold text-white">
+                      {asset.title}
+                    </p>
+                    <p className="line-clamp-2 text-sm leading-6 text-neutral-400">
+                      {asset.aiDescription ||
+                        asset.description ||
+                        "No AI description stored for this asset yet."}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-neutral-500">
+                    <span>{filesize(Number(asset.compressedSize || 0))}</span>
+                    <span>
+                      {asset.aiCaptions
+                        ? "Captions ready"
+                        : "Captions not generated"}
+                    </span>
+                  </div>
+                </div>
+              </button>
             ))}
           </div>
         </Card>
       )}
+
+      <AssetDetailDrawer
+        asset={selectedAsset}
+        open={Boolean(selectedAsset)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedAsset(null);
+          }
+        }}
+      />
+      <UpgradeModal
+        open={trialLocked}
+        featureName="Natural Language Search"
+        onOpenChange={setTrialLocked}
+      />
     </div>
   );
 }

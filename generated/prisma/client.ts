@@ -47,7 +47,12 @@ export { Prisma }
  */
 export type Video = Prisma.VideoModel
 /**
- * Model PaymentAuditLog
+ * Model TrialUsage
  * 
  */
-export type PaymentAuditLog = Prisma.PaymentAuditLogModel
+export type TrialUsage = Prisma.TrialUsageModel
+/**
+ * Model Subscription
+ * 
+ */
+export type Subscription = Prisma.SubscriptionModel

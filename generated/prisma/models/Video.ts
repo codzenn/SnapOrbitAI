@@ -28,10 +28,12 @@ export type AggregateVideo = {
 
 export type VideoAvgAggregateOutputType = {
   duration: number | null
+  qualityScore: number | null
 }
 
 export type VideoSumAggregateOutputType = {
   duration: number | null
+  qualityScore: number | null
 }
 
 export type VideoMinAggregateOutputType = {
@@ -44,6 +46,17 @@ export type VideoMinAggregateOutputType = {
   duration: number | null
   createdAt: Date | null
   updatedAt: Date | null
+  userId: string | null
+  mediaType: string | null
+  aiDescription: string | null
+  embedding: string | null
+  qualityScore: number | null
+  videoSummary: string | null
+  videoMood: string | null
+  videoHasAudio: boolean | null
+  videoTranscript: string | null
+  videoAspectRatioUrl: string | null
+  videoCompressedUrl: string | null
 }
 
 export type VideoMaxAggregateOutputType = {
@@ -56,6 +69,17 @@ export type VideoMaxAggregateOutputType = {
   duration: number | null
   createdAt: Date | null
   updatedAt: Date | null
+  userId: string | null
+  mediaType: string | null
+  aiDescription: string | null
+  embedding: string | null
+  qualityScore: number | null
+  videoSummary: string | null
+  videoMood: string | null
+  videoHasAudio: boolean | null
+  videoTranscript: string | null
+  videoAspectRatioUrl: string | null
+  videoCompressedUrl: string | null
 }
 
 export type VideoCountAggregateOutputType = {
@@ -68,16 +92,33 @@ export type VideoCountAggregateOutputType = {
   duration: number
   createdAt: number
   updatedAt: number
+  userId: number
+  mediaType: number
+  aiDescription: number
+  embedding: number
+  aiCaptions: number
+  qualityScore: number
+  videoSummary: number
+  videoScenes: number
+  videoMood: number
+  videoTopics: number
+  videoHasAudio: number
+  videoTranscript: number
+  videoCaptions: number
+  videoAspectRatioUrl: number
+  videoCompressedUrl: number
   _all: number
 }
 
 
 export type VideoAvgAggregateInputType = {
   duration?: true
+  qualityScore?: true
 }
 
 export type VideoSumAggregateInputType = {
   duration?: true
+  qualityScore?: true
 }
 
 export type VideoMinAggregateInputType = {
@@ -90,6 +131,17 @@ export type VideoMinAggregateInputType = {
   duration?: true
   createdAt?: true
   updatedAt?: true
+  userId?: true
+  mediaType?: true
+  aiDescription?: true
+  embedding?: true
+  qualityScore?: true
+  videoSummary?: true
+  videoMood?: true
+  videoHasAudio?: true
+  videoTranscript?: true
+  videoAspectRatioUrl?: true
+  videoCompressedUrl?: true
 }
 
 export type VideoMaxAggregateInputType = {
@@ -102,6 +154,17 @@ export type VideoMaxAggregateInputType = {
   duration?: true
   createdAt?: true
   updatedAt?: true
+  userId?: true
+  mediaType?: true
+  aiDescription?: true
+  embedding?: true
+  qualityScore?: true
+  videoSummary?: true
+  videoMood?: true
+  videoHasAudio?: true
+  videoTranscript?: true
+  videoAspectRatioUrl?: true
+  videoCompressedUrl?: true
 }
 
 export type VideoCountAggregateInputType = {
@@ -114,6 +177,21 @@ export type VideoCountAggregateInputType = {
   duration?: true
   createdAt?: true
   updatedAt?: true
+  userId?: true
+  mediaType?: true
+  aiDescription?: true
+  embedding?: true
+  aiCaptions?: true
+  qualityScore?: true
+  videoSummary?: true
+  videoScenes?: true
+  videoMood?: true
+  videoTopics?: true
+  videoHasAudio?: true
+  videoTranscript?: true
+  videoCaptions?: true
+  videoAspectRatioUrl?: true
+  videoCompressedUrl?: true
   _all?: true
 }
 
@@ -213,6 +291,21 @@ export type VideoGroupByOutputType = {
   duration: number
   createdAt: Date
   updatedAt: Date
+  userId: string
+  mediaType: string
+  aiDescription: string | null
+  embedding: string | null
+  aiCaptions: runtime.JsonValue | null
+  qualityScore: number | null
+  videoSummary: string | null
+  videoScenes: runtime.JsonValue | null
+  videoMood: string | null
+  videoTopics: runtime.JsonValue | null
+  videoHasAudio: boolean | null
+  videoTranscript: string | null
+  videoCaptions: runtime.JsonValue | null
+  videoAspectRatioUrl: string | null
+  videoCompressedUrl: string | null
   _count: VideoCountAggregateOutputType | null
   _avg: VideoAvgAggregateOutputType | null
   _sum: VideoSumAggregateOutputType | null
@@ -248,6 +341,21 @@ export type VideoWhereInput = {
   duration?: Prisma.FloatFilter<"Video"> | number
   createdAt?: Prisma.DateTimeFilter<"Video"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Video"> | Date | string
+  userId?: Prisma.StringFilter<"Video"> | string
+  mediaType?: Prisma.StringFilter<"Video"> | string
+  aiDescription?: Prisma.StringNullableFilter<"Video"> | string | null
+  embedding?: Prisma.StringNullableFilter<"Video"> | string | null
+  aiCaptions?: Prisma.JsonNullableFilter<"Video">
+  qualityScore?: Prisma.IntNullableFilter<"Video"> | number | null
+  videoSummary?: Prisma.StringNullableFilter<"Video"> | string | null
+  videoScenes?: Prisma.JsonNullableFilter<"Video">
+  videoMood?: Prisma.StringNullableFilter<"Video"> | string | null
+  videoTopics?: Prisma.JsonNullableFilter<"Video">
+  videoHasAudio?: Prisma.BoolNullableFilter<"Video"> | boolean | null
+  videoTranscript?: Prisma.StringNullableFilter<"Video"> | string | null
+  videoCaptions?: Prisma.JsonNullableFilter<"Video">
+  videoAspectRatioUrl?: Prisma.StringNullableFilter<"Video"> | string | null
+  videoCompressedUrl?: Prisma.StringNullableFilter<"Video"> | string | null
 }
 
 export type VideoOrderByWithRelationInput = {
@@ -260,22 +368,52 @@ export type VideoOrderByWithRelationInput = {
   duration?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
+  mediaType?: Prisma.SortOrder
+  aiDescription?: Prisma.SortOrderInput | Prisma.SortOrder
+  embedding?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiCaptions?: Prisma.SortOrderInput | Prisma.SortOrder
+  qualityScore?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoSummary?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoScenes?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoMood?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoTopics?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoHasAudio?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoTranscript?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoCaptions?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoAspectRatioUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoCompressedUrl?: Prisma.SortOrderInput | Prisma.SortOrder
 }
 
 export type VideoWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  publicId?: string
   AND?: Prisma.VideoWhereInput | Prisma.VideoWhereInput[]
   OR?: Prisma.VideoWhereInput[]
   NOT?: Prisma.VideoWhereInput | Prisma.VideoWhereInput[]
   title?: Prisma.StringFilter<"Video"> | string
   description?: Prisma.StringNullableFilter<"Video"> | string | null
-  publicId?: Prisma.StringFilter<"Video"> | string
   originalSize?: Prisma.StringFilter<"Video"> | string
   compressedSize?: Prisma.StringFilter<"Video"> | string
   duration?: Prisma.FloatFilter<"Video"> | number
   createdAt?: Prisma.DateTimeFilter<"Video"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Video"> | Date | string
-}, "id">
+  userId?: Prisma.StringFilter<"Video"> | string
+  mediaType?: Prisma.StringFilter<"Video"> | string
+  aiDescription?: Prisma.StringNullableFilter<"Video"> | string | null
+  embedding?: Prisma.StringNullableFilter<"Video"> | string | null
+  aiCaptions?: Prisma.JsonNullableFilter<"Video">
+  qualityScore?: Prisma.IntNullableFilter<"Video"> | number | null
+  videoSummary?: Prisma.StringNullableFilter<"Video"> | string | null
+  videoScenes?: Prisma.JsonNullableFilter<"Video">
+  videoMood?: Prisma.StringNullableFilter<"Video"> | string | null
+  videoTopics?: Prisma.JsonNullableFilter<"Video">
+  videoHasAudio?: Prisma.BoolNullableFilter<"Video"> | boolean | null
+  videoTranscript?: Prisma.StringNullableFilter<"Video"> | string | null
+  videoCaptions?: Prisma.JsonNullableFilter<"Video">
+  videoAspectRatioUrl?: Prisma.StringNullableFilter<"Video"> | string | null
+  videoCompressedUrl?: Prisma.StringNullableFilter<"Video"> | string | null
+}, "id" | "publicId">
 
 export type VideoOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -287,6 +425,21 @@ export type VideoOrderByWithAggregationInput = {
   duration?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
+  mediaType?: Prisma.SortOrder
+  aiDescription?: Prisma.SortOrderInput | Prisma.SortOrder
+  embedding?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiCaptions?: Prisma.SortOrderInput | Prisma.SortOrder
+  qualityScore?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoSummary?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoScenes?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoMood?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoTopics?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoHasAudio?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoTranscript?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoCaptions?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoAspectRatioUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  videoCompressedUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.VideoCountOrderByAggregateInput
   _avg?: Prisma.VideoAvgOrderByAggregateInput
   _max?: Prisma.VideoMaxOrderByAggregateInput
@@ -307,6 +460,21 @@ export type VideoScalarWhereWithAggregatesInput = {
   duration?: Prisma.FloatWithAggregatesFilter<"Video"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Video"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Video"> | Date | string
+  userId?: Prisma.StringWithAggregatesFilter<"Video"> | string
+  mediaType?: Prisma.StringWithAggregatesFilter<"Video"> | string
+  aiDescription?: Prisma.StringNullableWithAggregatesFilter<"Video"> | string | null
+  embedding?: Prisma.StringNullableWithAggregatesFilter<"Video"> | string | null
+  aiCaptions?: Prisma.JsonNullableWithAggregatesFilter<"Video">
+  qualityScore?: Prisma.IntNullableWithAggregatesFilter<"Video"> | number | null
+  videoSummary?: Prisma.StringNullableWithAggregatesFilter<"Video"> | string | null
+  videoScenes?: Prisma.JsonNullableWithAggregatesFilter<"Video">
+  videoMood?: Prisma.StringNullableWithAggregatesFilter<"Video"> | string | null
+  videoTopics?: Prisma.JsonNullableWithAggregatesFilter<"Video">
+  videoHasAudio?: Prisma.BoolNullableWithAggregatesFilter<"Video"> | boolean | null
+  videoTranscript?: Prisma.StringNullableWithAggregatesFilter<"Video"> | string | null
+  videoCaptions?: Prisma.JsonNullableWithAggregatesFilter<"Video">
+  videoAspectRatioUrl?: Prisma.StringNullableWithAggregatesFilter<"Video"> | string | null
+  videoCompressedUrl?: Prisma.StringNullableWithAggregatesFilter<"Video"> | string | null
 }
 
 export type VideoCreateInput = {
@@ -319,6 +487,21 @@ export type VideoCreateInput = {
   duration: number
   createdAt?: Date | string
   updatedAt?: Date | string
+  userId: string
+  mediaType?: string
+  aiDescription?: string | null
+  embedding?: string | null
+  aiCaptions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  qualityScore?: number | null
+  videoSummary?: string | null
+  videoScenes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoMood?: string | null
+  videoTopics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoHasAudio?: boolean | null
+  videoTranscript?: string | null
+  videoCaptions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoAspectRatioUrl?: string | null
+  videoCompressedUrl?: string | null
 }
 
 export type VideoUncheckedCreateInput = {
@@ -331,6 +514,21 @@ export type VideoUncheckedCreateInput = {
   duration: number
   createdAt?: Date | string
   updatedAt?: Date | string
+  userId: string
+  mediaType?: string
+  aiDescription?: string | null
+  embedding?: string | null
+  aiCaptions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  qualityScore?: number | null
+  videoSummary?: string | null
+  videoScenes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoMood?: string | null
+  videoTopics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoHasAudio?: boolean | null
+  videoTranscript?: string | null
+  videoCaptions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoAspectRatioUrl?: string | null
+  videoCompressedUrl?: string | null
 }
 
 export type VideoUpdateInput = {
@@ -343,6 +541,21 @@ export type VideoUpdateInput = {
   duration?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  mediaType?: Prisma.StringFieldUpdateOperationsInput | string
+  aiDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  embedding?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiCaptions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  qualityScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  videoSummary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoScenes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoMood?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoTopics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoHasAudio?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  videoTranscript?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoCaptions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoAspectRatioUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoCompressedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type VideoUncheckedUpdateInput = {
@@ -355,6 +568,21 @@ export type VideoUncheckedUpdateInput = {
   duration?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  mediaType?: Prisma.StringFieldUpdateOperationsInput | string
+  aiDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  embedding?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiCaptions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  qualityScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  videoSummary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoScenes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoMood?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoTopics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoHasAudio?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  videoTranscript?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoCaptions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoAspectRatioUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoCompressedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type VideoCreateManyInput = {
@@ -367,6 +595,21 @@ export type VideoCreateManyInput = {
   duration: number
   createdAt?: Date | string
   updatedAt?: Date | string
+  userId: string
+  mediaType?: string
+  aiDescription?: string | null
+  embedding?: string | null
+  aiCaptions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  qualityScore?: number | null
+  videoSummary?: string | null
+  videoScenes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoMood?: string | null
+  videoTopics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoHasAudio?: boolean | null
+  videoTranscript?: string | null
+  videoCaptions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoAspectRatioUrl?: string | null
+  videoCompressedUrl?: string | null
 }
 
 export type VideoUpdateManyMutationInput = {
@@ -379,6 +622,21 @@ export type VideoUpdateManyMutationInput = {
   duration?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  mediaType?: Prisma.StringFieldUpdateOperationsInput | string
+  aiDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  embedding?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiCaptions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  qualityScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  videoSummary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoScenes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoMood?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoTopics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoHasAudio?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  videoTranscript?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoCaptions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoAspectRatioUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoCompressedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type VideoUncheckedUpdateManyInput = {
@@ -391,6 +649,21 @@ export type VideoUncheckedUpdateManyInput = {
   duration?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  mediaType?: Prisma.StringFieldUpdateOperationsInput | string
+  aiDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  embedding?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiCaptions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  qualityScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  videoSummary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoScenes?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoMood?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoTopics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoHasAudio?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  videoTranscript?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoCaptions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  videoAspectRatioUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  videoCompressedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type VideoCountOrderByAggregateInput = {
@@ -403,10 +676,26 @@ export type VideoCountOrderByAggregateInput = {
   duration?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
+  mediaType?: Prisma.SortOrder
+  aiDescription?: Prisma.SortOrder
+  embedding?: Prisma.SortOrder
+  aiCaptions?: Prisma.SortOrder
+  qualityScore?: Prisma.SortOrder
+  videoSummary?: Prisma.SortOrder
+  videoScenes?: Prisma.SortOrder
+  videoMood?: Prisma.SortOrder
+  videoTopics?: Prisma.SortOrder
+  videoHasAudio?: Prisma.SortOrder
+  videoTranscript?: Prisma.SortOrder
+  videoCaptions?: Prisma.SortOrder
+  videoAspectRatioUrl?: Prisma.SortOrder
+  videoCompressedUrl?: Prisma.SortOrder
 }
 
 export type VideoAvgOrderByAggregateInput = {
   duration?: Prisma.SortOrder
+  qualityScore?: Prisma.SortOrder
 }
 
 export type VideoMaxOrderByAggregateInput = {
@@ -419,6 +708,17 @@ export type VideoMaxOrderByAggregateInput = {
   duration?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
+  mediaType?: Prisma.SortOrder
+  aiDescription?: Prisma.SortOrder
+  embedding?: Prisma.SortOrder
+  qualityScore?: Prisma.SortOrder
+  videoSummary?: Prisma.SortOrder
+  videoMood?: Prisma.SortOrder
+  videoHasAudio?: Prisma.SortOrder
+  videoTranscript?: Prisma.SortOrder
+  videoAspectRatioUrl?: Prisma.SortOrder
+  videoCompressedUrl?: Prisma.SortOrder
 }
 
 export type VideoMinOrderByAggregateInput = {
@@ -431,10 +731,22 @@ export type VideoMinOrderByAggregateInput = {
   duration?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
+  mediaType?: Prisma.SortOrder
+  aiDescription?: Prisma.SortOrder
+  embedding?: Prisma.SortOrder
+  qualityScore?: Prisma.SortOrder
+  videoSummary?: Prisma.SortOrder
+  videoMood?: Prisma.SortOrder
+  videoHasAudio?: Prisma.SortOrder
+  videoTranscript?: Prisma.SortOrder
+  videoAspectRatioUrl?: Prisma.SortOrder
+  videoCompressedUrl?: Prisma.SortOrder
 }
 
 export type VideoSumOrderByAggregateInput = {
   duration?: Prisma.SortOrder
+  qualityScore?: Prisma.SortOrder
 }
 
 export type StringFieldUpdateOperationsInput = {
@@ -457,6 +769,18 @@ export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
 }
 
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
+export type NullableBoolFieldUpdateOperationsInput = {
+  set?: boolean | null
+}
+
 
 
 export type VideoSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -469,6 +793,21 @@ export type VideoSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   duration?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  userId?: boolean
+  mediaType?: boolean
+  aiDescription?: boolean
+  embedding?: boolean
+  aiCaptions?: boolean
+  qualityScore?: boolean
+  videoSummary?: boolean
+  videoScenes?: boolean
+  videoMood?: boolean
+  videoTopics?: boolean
+  videoHasAudio?: boolean
+  videoTranscript?: boolean
+  videoCaptions?: boolean
+  videoAspectRatioUrl?: boolean
+  videoCompressedUrl?: boolean
 }, ExtArgs["result"]["video"]>
 
 export type VideoSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -481,6 +820,21 @@ export type VideoSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   duration?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  userId?: boolean
+  mediaType?: boolean
+  aiDescription?: boolean
+  embedding?: boolean
+  aiCaptions?: boolean
+  qualityScore?: boolean
+  videoSummary?: boolean
+  videoScenes?: boolean
+  videoMood?: boolean
+  videoTopics?: boolean
+  videoHasAudio?: boolean
+  videoTranscript?: boolean
+  videoCaptions?: boolean
+  videoAspectRatioUrl?: boolean
+  videoCompressedUrl?: boolean
 }, ExtArgs["result"]["video"]>
 
 export type VideoSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -493,6 +847,21 @@ export type VideoSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   duration?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  userId?: boolean
+  mediaType?: boolean
+  aiDescription?: boolean
+  embedding?: boolean
+  aiCaptions?: boolean
+  qualityScore?: boolean
+  videoSummary?: boolean
+  videoScenes?: boolean
+  videoMood?: boolean
+  videoTopics?: boolean
+  videoHasAudio?: boolean
+  videoTranscript?: boolean
+  videoCaptions?: boolean
+  videoAspectRatioUrl?: boolean
+  videoCompressedUrl?: boolean
 }, ExtArgs["result"]["video"]>
 
 export type VideoSelectScalar = {
@@ -505,9 +874,24 @@ export type VideoSelectScalar = {
   duration?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  userId?: boolean
+  mediaType?: boolean
+  aiDescription?: boolean
+  embedding?: boolean
+  aiCaptions?: boolean
+  qualityScore?: boolean
+  videoSummary?: boolean
+  videoScenes?: boolean
+  videoMood?: boolean
+  videoTopics?: boolean
+  videoHasAudio?: boolean
+  videoTranscript?: boolean
+  videoCaptions?: boolean
+  videoAspectRatioUrl?: boolean
+  videoCompressedUrl?: boolean
 }
 
-export type VideoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "description" | "publicId" | "originalSize" | "compressedSize" | "duration" | "createdAt" | "updatedAt", ExtArgs["result"]["video"]>
+export type VideoOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "description" | "publicId" | "originalSize" | "compressedSize" | "duration" | "createdAt" | "updatedAt" | "userId" | "mediaType" | "aiDescription" | "embedding" | "aiCaptions" | "qualityScore" | "videoSummary" | "videoScenes" | "videoMood" | "videoTopics" | "videoHasAudio" | "videoTranscript" | "videoCaptions" | "videoAspectRatioUrl" | "videoCompressedUrl", ExtArgs["result"]["video"]>
 
 export type $VideoPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Video"
@@ -522,6 +906,21 @@ export type $VideoPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     duration: number
     createdAt: Date
     updatedAt: Date
+    userId: string
+    mediaType: string
+    aiDescription: string | null
+    embedding: string | null
+    aiCaptions: runtime.JsonValue | null
+    qualityScore: number | null
+    videoSummary: string | null
+    videoScenes: runtime.JsonValue | null
+    videoMood: string | null
+    videoTopics: runtime.JsonValue | null
+    videoHasAudio: boolean | null
+    videoTranscript: string | null
+    videoCaptions: runtime.JsonValue | null
+    videoAspectRatioUrl: string | null
+    videoCompressedUrl: string | null
   }, ExtArgs["result"]["video"]>
   composites: {}
 }
@@ -954,6 +1353,21 @@ export interface VideoFieldRefs {
   readonly duration: Prisma.FieldRef<"Video", 'Float'>
   readonly createdAt: Prisma.FieldRef<"Video", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Video", 'DateTime'>
+  readonly userId: Prisma.FieldRef<"Video", 'String'>
+  readonly mediaType: Prisma.FieldRef<"Video", 'String'>
+  readonly aiDescription: Prisma.FieldRef<"Video", 'String'>
+  readonly embedding: Prisma.FieldRef<"Video", 'String'>
+  readonly aiCaptions: Prisma.FieldRef<"Video", 'Json'>
+  readonly qualityScore: Prisma.FieldRef<"Video", 'Int'>
+  readonly videoSummary: Prisma.FieldRef<"Video", 'String'>
+  readonly videoScenes: Prisma.FieldRef<"Video", 'Json'>
+  readonly videoMood: Prisma.FieldRef<"Video", 'String'>
+  readonly videoTopics: Prisma.FieldRef<"Video", 'Json'>
+  readonly videoHasAudio: Prisma.FieldRef<"Video", 'Boolean'>
+  readonly videoTranscript: Prisma.FieldRef<"Video", 'String'>
+  readonly videoCaptions: Prisma.FieldRef<"Video", 'Json'>
+  readonly videoAspectRatioUrl: Prisma.FieldRef<"Video", 'String'>
+  readonly videoCompressedUrl: Prisma.FieldRef<"Video", 'String'>
 }
     
 

@@ -34,7 +34,7 @@ export default function Page() {
                   Start your creative journey today.
                 </h1>
                 <p className="max-w-md text-base leading-relaxed text-neutral-400">
-                  Join thousands of creators managing their media assets, applying AI transformations, and optimizing content.
+                  Built for creators and developers.
                 </p>
               </div>
             </div>

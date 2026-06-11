@@ -12,25 +12,24 @@ describe("Auto logout API", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (clerkClient as any).mockResolvedValue({
+    vi.mocked(clerkClient).mockResolvedValue({
       sessions: {
         revokeSession,
       },
-    });
+    } as unknown as Awaited<ReturnType<typeof clerkClient>>);
   });
 
   it("returns ok when no session", async () => {
-    (auth as any).mockResolvedValue({ sessionId: null });
+    vi.mocked(auth).mockResolvedValue({ sessionId: null } as Awaited<ReturnType<typeof auth>>);
     const res = await POST();
     expect(res.status).toBe(200);
     expect(revokeSession).not.toHaveBeenCalled();
   });
 
   it("revokes session when sessionId present", async () => {
-    (auth as any).mockResolvedValue({ sessionId: "sess_123" });
+    vi.mocked(auth).mockResolvedValue({ sessionId: "sess_123" } as Awaited<ReturnType<typeof auth>>);
     const res = await POST();
     expect(res.status).toBe(200);
     expect(revokeSession).toHaveBeenCalledWith("sess_123");
   });
 });
-

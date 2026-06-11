@@ -1,180 +1,156 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Check, PlayCircle, ArrowLeft, CheckCircle2, CircleAlert, X, Loader2, Camera, User, Video, Rocket } from "lucide-react";
-import { PLANS } from "@/lib/plans";
+import { ArrowLeft, Check, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
-declare global {
-  interface Window {
-    Razorpay?: any;
-  }
-}
+type BillingCycle = "monthly" | "yearly";
 
-function loadRazorpayCheckout(): Promise<boolean> {
-  return new Promise((resolve) => {
-    if (typeof window === "undefined") return resolve(false);
-    if (window.Razorpay) return resolve(true);
+const PRICE_IDS = {
+  pro: {
+    monthly: "pro_monthly",
+    yearly: "pro_yearly",
+  },
+  business: {
+    monthly: "business_monthly",
+    yearly: "business_yearly",
+  },
+} as const;
 
-    const existing = document.getElementById("razorpay-checkout-js");
-    if (existing) {
-      existing.addEventListener("load", () => resolve(true));
-      existing.addEventListener("error", () => resolve(false));
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.id = "razorpay-checkout-js";
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-}
+const PRICING = [
+  {
+    id: "free",
+    name: "Free",
+    monthly: "$0",
+    yearly: "$0",
+    highlight: false,
+    description: "For trying the core workflow with limited usage.",
+    cta: "Start Free",
+    features: [
+      "1 free trial of every feature",
+      "1 Video Analysis run",
+      "1 Video Caption generation",
+      "1 Aspect Ratio conversion",
+      "Unlimited Video Compression",
+      "Max 5 assets stored for 7 days",
+    ],
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    monthly: "$12",
+    yearly: "$99",
+    description: "For solo creators and marketers running daily AI workflows.",
+    cta: "Start Pro",
+    highlight: true,
+    features: [
+      "Unlimited background removal",
+      "Unlimited generative fill",
+      "Unlimited captions and quality audits",
+      "Natural-language asset search",
+      "Batch processing up to 10 images",
+      "Unlimited Video Analysis",
+      "Unlimited Video Captions",
+      "50 aspect ratio conversions per month",
+      "Unlimited Video Compression",
+    ],
+  },
+  {
+    id: "business",
+    name: "Business",
+    monthly: "$29",
+    yearly: "$249",
+    highlight: false,
+    description: "For teams that need unlimited workflows and analytics.",
+    cta: "Start Business",
+    features: [
+      "Everything in Pro",
+      "Batch processing up to 25 images",
+      "Unlimited aspect ratio conversions",
+      "Business usage analytics dashboard",
+      "Stripe customer portal access",
+      "Priority support",
+    ],
+  },
+] as const;
 
 function PricingContent() {
-  const { userId, isSignedIn, isLoaded } = useAuth();
-  const [loading, setLoading] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [billingStatus, setBillingStatus] = useState<"success" | "cancelled" | null>(null);
-  const [coupon, setCoupon] = useState<string>("");
+  const { isLoaded, isSignedIn } = useAuth();
   const searchParams = useSearchParams();
+  const [cycle, setCycle] = useState<BillingCycle>("monthly");
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const couponLabel = useMemo(() => coupon.trim().toUpperCase(), [coupon]);
+  const autoPlan = searchParams.get("plan");
 
-  useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      const autoPlan = searchParams.get("plan");
-      if (autoPlan) {
-        window.history.replaceState({}, "", "/pricing");
-        handleUpgrade(autoPlan);
-      }
-    }
-  }, [isLoaded, isSignedIn, searchParams]);
+  const subtitle = useMemo(
+    () =>
+      cycle === "monthly"
+        ? "Billed monthly. Cancel any time."
+        : "Billed yearly. Save more over 12 months.",
+    [cycle],
+  );
 
-  useEffect(() => {
-    const billing = searchParams.get("billing");
-    if (billing === "success") {
-      setBillingStatus("success");
-    } else if (billing === "cancelled") {
-      setBillingStatus("cancelled");
-    }
-  }, [searchParams]);
-
-  const handleUpgrade = async (planId: string) => {
+  const startCheckout = useCallback(async (planId: "pro" | "business") => {
     if (!isSignedIn) {
       window.location.href = `/sign-up?redirect_url=${encodeURIComponent(`/pricing?plan=${planId}`)}`;
       return;
     }
 
-    if (planId === "free") {
-      window.location.href = "/home";
-      return;
-    }
-
     try {
-      setLoading(planId);
+      setLoadingPlan(planId);
       setError(null);
-      const response = await fetch("/api/billing/create-checkout-session", {
+
+      const response = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ plan: planId, coupon: coupon.trim() || undefined }),
+        body: JSON.stringify({
+          priceId: PRICE_IDS[planId][cycle],
+        }),
       });
-
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to start checkout");
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || "Could not start Stripe checkout.");
       }
 
-      const loaded = await loadRazorpayCheckout();
-      if (!loaded || !window.Razorpay) {
-        throw new Error("Failed to load Razorpay checkout. Please try again.");
-      }
-
-      if (!data.keyId || !data.subscriptionId) {
-        throw new Error("Invalid checkout response");
-      }
-
-      const rzpay = new window.Razorpay({
-        key: data.keyId,
-        subscription_id: data.subscriptionId,
-        name: "SnapOrbitAI",
-        description: planId === "pro" ? "Upgrade to Professional" : "Upgrade to Enterprise",
-        prefill: {
-          email: data.email || undefined,
-        },
-        ...(data.offerId ? { offer_id: data.offerId } : {}),
-        notes: {
-          plan: planId,
-          coupon: couponLabel,
-        },
-        handler: async (rsp: any) => {
-          try {
-            const verifyRes = await fetch("/api/billing/razorpay/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                plan: planId,
-                razorpay_payment_id: rsp.razorpay_payment_id,
-                razorpay_subscription_id: rsp.razorpay_subscription_id,
-                razorpay_signature: rsp.razorpay_signature,
-              }),
-            });
-            const verifyJson = await verifyRes.json();
-            if (!verifyRes.ok || !verifyJson.ok) {
-              throw new Error(verifyJson.error || "Payment verification failed");
-            }
-            window.location.href = "/home";
-          } catch (err) {
-            setError(err instanceof Error ? err.message : "Payment verification failed");
-          } finally {
-            setLoading(null);
-          }
-        },
-        modal: {
-          ondismiss: () => {
-            setBillingStatus("cancelled");
-            setLoading(null);
-          },
-        },
-      });
-
-      rzpay.open();
-    } catch (err) {
-      console.error("Upgrade error:", err);
+      window.location.href = data.url;
+    } catch (checkoutError) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "An unexpected error occurred. Please try again.",
+        checkoutError instanceof Error
+          ? checkoutError.message
+          : "Could not start Stripe checkout.",
       );
-      setLoading(null);
+      setLoadingPlan(null);
     }
-  };
+  }, [cycle, isSignedIn]);
+
+  useEffect(() => {
+    if (!isLoaded || !autoPlan || !isSignedIn) {
+      return;
+    }
+
+    if (autoPlan === "pro" || autoPlan === "business") {
+      void startCheckout(autoPlan);
+      window.history.replaceState({}, "", "/pricing");
+    }
+  }, [autoPlan, isLoaded, isSignedIn, startCheckout]);
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <nav className="sticky top-0 z-50 border-b border-white/10 bg-black/40 backdrop-blur-md px-4 md:px-8">
-        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white">
-              <Camera className="size-5" />
-            </div>
-            <div>
-              <p className="text-lg font-semibold tracking-tight text-white">SnapOrbitAI</p>
-            </div>
+      <nav className="sticky top-0 z-50 border-b border-white/10 bg-black/40 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
+          <Link href="/" className="text-lg font-semibold tracking-tight text-white">
+            SnapOrbitAI
           </Link>
-          <Button asChild variant="ghost" className="text-neutral-300 hover:text-white hover:bg-white/10">
-            <Link href={userId ? "/home" : "/"}>
+          <Button asChild variant="ghost" className="text-neutral-300 hover:bg-white/10 hover:text-white">
+            <Link href={isSignedIn ? "/home" : "/"}>
               <ArrowLeft className="mr-2 size-4" />
               Back
             </Link>
@@ -182,143 +158,149 @@ function PricingContent() {
         </div>
       </nav>
 
-      <div className="mx-auto max-w-5xl px-4 py-16 md:px-8">
-        {billingStatus === "success" && (
-          <div className="flex items-start gap-4 rounded-2xl border border-green-500/20 bg-green-500/10 p-4 text-green-400 shadow-sm mb-8">
-            <CheckCircle2 className="mt-0.5 size-5 shrink-0" />
-            <div className="flex flex-1 flex-col gap-1">
-              <h3 className="font-bold">Upgrade successful</h3>
-              <p className="text-sm opacity-90">Your subscription is now active. Premium features should be unlocked.</p>
-            </div>
-            <Button variant="ghost" size="icon" onClick={() => setBillingStatus(null)} className="h-6 w-6 text-green-400 hover:bg-green-500/20">
-              <X className="size-4" />
-            </Button>
-          </div>
-        )}
-
-        {billingStatus === "cancelled" && (
-          <div className="flex items-start gap-4 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-yellow-400 shadow-sm mb-8">
-            <CircleAlert className="mt-0.5 size-5 shrink-0" />
-            <div className="flex flex-1 flex-col gap-1">
-              <h3 className="font-bold">Checkout cancelled</h3>
-              <p className="text-sm opacity-90">No changes were made to your subscription.</p>
-            </div>
-            <Button variant="ghost" size="icon" onClick={() => setBillingStatus(null)} className="h-6 w-6 text-yellow-400 hover:bg-yellow-500/20">
-              <X className="size-4" />
-            </Button>
-          </div>
-        )}
-
-        {error && (
-          <div className="flex items-center justify-between rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-red-400 shadow-sm mb-8">
-            <div className="flex items-center gap-3">
-              <CircleAlert className="size-5" />
-              <span>{error}</span>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => setError(null)} className="border-red-500/30 hover:bg-red-500/20 text-red-400">
-              Dismiss
-            </Button>
-          </div>
-        )}
-
+      <div className="mx-auto max-w-7xl px-4 py-16 md:px-8">
         <div className="text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight md:text-5xl text-white">
-            Choose your plan
+          <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm text-neutral-300">
+            <Sparkles className="size-4" />
+            Flexible plans for every stage
+          </div>
+          <h1 className="mt-6 text-4xl font-extrabold tracking-tight md:text-5xl">
+            Pricing Plans
           </h1>
-          <p className="mt-4 text-lg text-neutral-400">
-            From free guest trials to professional media workflows.
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-neutral-400">
+            Pick the plan that matches your workflow and upgrade any time.
           </p>
+          <p className="mt-2 text-sm text-neutral-500">{subtitle}</p>
         </div>
 
-        <Card className="mt-10 bg-black/40 border-white/10 text-white backdrop-blur-sm max-w-xl mx-auto">
-          <CardContent className="p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <Label className="text-sm font-semibold text-white">Coupon code</Label>
-              <p className="text-xs text-neutral-400 mt-1">Optional. Applied at checkout if configured.</p>
-            </div>
-            <Input
-              value={coupon}
-              onChange={(e) => setCoupon(e.target.value)}
-              placeholder="Enter coupon"
-              className="bg-white/5 border-white/10 text-white placeholder:text-neutral-500 focus-visible:ring-white/20 w-full sm:w-64"
-            />
-          </CardContent>
-        </Card>
-
-        <div className="mt-16 grid gap-8 md:grid-cols-3">
-          {PLANS.map((plan) => (
-            <Card
-              key={plan.id}
-              className={`bg-black/40 border-white/10 text-white backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] flex flex-col ${
-                plan.highlighted ? "ring-2 ring-blue-500 shadow-2xl shadow-blue-500/20" : ""
+        <div className="mt-10 flex justify-center">
+          <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1">
+            <button
+              type="button"
+              onClick={() => setCycle("monthly")}
+              className={`rounded-full px-4 py-2 text-sm transition ${
+                cycle === "monthly"
+                  ? "bg-white text-black"
+                  : "text-neutral-300 hover:text-white"
               }`}
             >
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {plan.id === "free" && <div className="p-2 rounded-xl bg-white/10 text-white"><User className="size-5" /></div>}
-                    {plan.id === "pro" && <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400"><Video className="size-5" /></div>}
-                    {plan.id === "pro_plus" && <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400"><Rocket className="size-5" /></div>}
-                    <CardTitle className="text-2xl font-bold text-white">{plan.name}</CardTitle>
-                  </div>
-                  {plan.highlighted && (
-                    <span className="rounded-full bg-blue-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+              Monthly
+            </button>
+            <button
+              type="button"
+              onClick={() => setCycle("yearly")}
+              className={`rounded-full px-4 py-2 text-sm transition ${
+                cycle === "yearly"
+                  ? "bg-white text-black"
+                  : "text-neutral-300 hover:text-white"
+              }`}
+            >
+              Yearly
+            </button>
+          </div>
+        </div>
+
+        {error ? (
+          <div className="mx-auto mt-8 max-w-3xl rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
+            {error}
+          </div>
+        ) : null}
+
+        <div className="mt-14 grid gap-8 lg:grid-cols-3">
+          {PRICING.map((plan) => (
+            <Card
+              key={plan.id}
+              className={`flex flex-col border-white/10 bg-black/40 text-white backdrop-blur-sm ${
+                plan.highlight ? "ring-2 ring-white/20" : ""
+              }`}
+            >
+              <CardHeader>
+                <div className="flex items-center justify-between gap-3">
+                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                  {plan.highlight ? (
+                    <span className="rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-black">
                       Most Popular
                     </span>
-                  )}
+                  ) : null}
                 </div>
-                <div className="flex items-baseline gap-1 mt-4">
-                  <span className="text-4xl font-extrabold">{plan.price}</span>
-                  <span className="text-neutral-400">/month</span>
+                <CardDescription className="text-neutral-400">
+                  {plan.description}
+                </CardDescription>
+                <div className="pt-4">
+                  <span className="text-5xl font-extrabold">
+                    {cycle === "monthly" ? plan.monthly : plan.yearly}
+                  </span>
+                  <span className="ml-2 text-neutral-400">
+                    /{cycle === "monthly" ? "month" : "year"}
+                  </span>
                 </div>
               </CardHeader>
-              
-              <div className="mx-6 h-px bg-white/10"></div>
 
-              <CardContent className="flex-grow pt-6">
-                <ul className="space-y-4">
+              <CardContent className="flex-1">
+                <ul className="space-y-3">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3 text-sm">
+                    <li key={feature} className="flex items-start gap-3 text-sm text-neutral-300">
                       <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500/20 text-green-400">
                         <Check className="size-3.5" />
                       </div>
-                      <span className="text-neutral-300 leading-relaxed">
-                        {feature}
-                      </span>
+                      <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
               </CardContent>
 
-              <CardFooter className="pt-4">
-                <Button
-                  onClick={() => handleUpgrade(plan.id)}
-                  disabled={loading !== null}
-                  variant={plan.highlighted ? "default" : "outline"}
-                  className={`w-full ${plan.highlighted ? "bg-white text-black hover:bg-neutral-200" : "border-white/20 bg-transparent text-white hover:bg-white/10"} ${loading === plan.id ? "opacity-50 cursor-wait" : ""}`}
-                >
-                  {loading === plan.id ? (
-                    <><Loader2 className="mr-2 size-4 animate-spin" /> Redirecting...</>
-                  ) : (
-                    plan.cta
-                  )}
-                </Button>
+              <CardFooter>
+                {plan.id === "free" ? (
+                  <Button asChild className="w-full bg-white text-black hover:bg-neutral-200">
+                    <Link href={isSignedIn ? "/home" : "/sign-up"}>{plan.cta}</Link>
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={() => void startCheckout(plan.id as "pro" | "business")}
+                    disabled={loadingPlan !== null}
+                    className="w-full bg-white text-black hover:bg-neutral-200 disabled:bg-white/20 disabled:text-white/50"
+                  >
+                    {loadingPlan === plan.id ? (
+                      <>
+                        <Loader2 className="mr-2 size-4 animate-spin" />
+                        Redirecting...
+                      </>
+                    ) : (
+                      plan.cta
+                    )}
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           ))}
         </div>
 
-        <Card className="mt-16 bg-black/40 border-white/10 text-white backdrop-blur-sm text-center">
-          <CardContent className="p-8">
-            <h3 className="text-xl font-bold text-white">Have more questions?</h3>
-            <p className="mt-2 text-neutral-400">
-              Contact our support team for custom enterprise solutions or volume discounts.
-            </p>
-            <Button variant="outline" className="mt-6 border-white/20 bg-transparent text-white hover:bg-white/10">
-              Contact Support
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="mt-16 grid gap-4 lg:grid-cols-3">
+          {[
+            {
+              question: "What happens after the free trial?",
+              answer: "Upgrade to Pro ($12/mo) or Business ($29/mo) for unlimited image AI, plus Video Studio access and higher conversion limits.",
+            },
+            {
+              question: "Is there a free trial for Pro or Business?",
+              answer: "No, but the free plan lets you test every major workflow once before upgrading.",
+            },
+            {
+              question: "Can I cancel anytime?",
+              answer: "Yes. Manage or cancel your subscription from the Stripe customer portal.",
+            },
+          ].map((item) => (
+            <Card key={item.question} className="border-white/10 bg-black/40 text-white backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-lg">{item.question}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm leading-6 text-neutral-400">{item.answer}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -328,7 +310,7 @@ export default function PricingPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-black flex items-center justify-center text-white">
+        <div className="flex min-h-screen items-center justify-center bg-black text-white">
           <Loader2 className="size-8 animate-spin" />
         </div>
       }

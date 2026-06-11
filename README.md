@@ -1,369 +1,282 @@
 # SnapOrbitAI
 
-git add README.md
+SnapOrbitAI is a production-ready AI media workspace for creators, marketers, and teams. It combines Cloudinary media delivery, Gemini-powered image and video intelligence, Clerk authentication, Stripe billing, and Prisma/PostgreSQL persistence inside a single Next.js application.
 
----
+## What It Does
 
-## 📋 Table of Contents
+SnapOrbitAI helps users upload, organize, enhance, analyze, and repurpose media assets through AI-assisted workflows.
 
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Environment Variables](#environment-variables)
-- [Getting Started](#getting-started)
-- [Project Structure](#project-structure)
-- [Database Setup](#database-setup)
-- [API Documentation](#api-documentation)
-- [Contributing](#contributing)
-- [License](#license)
+### Image workflows
 
----
+- Asset library with search and filtering
+- Natural-language semantic search
+- AI-generated captions for social platforms
+- AI quality audit
+- Background removal
+- Generative fill / image expansion
+- Batch processing for repeated image operations
 
-## 🎯 Overview
+### Video workflows
 
-SnapOrbitAI is a comprehensive media management platform designed for content creators and businesses. It provides an intuitive interface for uploading, organizing, optimizing, and sharing media with advanced compression capabilities and social media integration.
+- AI video analysis with summary, scene timeline, mood, topics, and key quotes
+- Audio-aware video caption generation
+- Video compression to delivery-ready formats
+- Landscape-to-portrait video conversion for short-form platforms
 
-**Live Demo:** [Coming Soon](#)  
-**Documentation:** See [docs](#) for detailed guides
+### Business workflows
 
----
+- Usage analytics dashboard
+- Stripe-powered subscription management
+- Feature trial gating for free users
 
-## ✨ Features
+## Product Stack
 
-- **Video Upload & Management** - Seamlessly upload and manage video files with automatic processing
-- **Social Media Integration** - Share videos directly to social platforms with optimized formats
-- **Video Compression** - Intelligent automatic compression to reduce file sizes without quality loss
-- **User Authentication** - Secure authentication powered by Clerk
-- **Dashboard** - Comprehensive home dashboard for managing all uploaded content
-- **Responsive Design** - Fully responsive UI that works across all devices
-- **Real-time Updates** - Live status updates for video processing
-- **Database Management** - Robust PostgreSQL database with Prisma ORM
+- `Next.js 16`
+- `React 19`
+- `TypeScript`
+- `Tailwind CSS`
+- `Clerk`
+- `Cloudinary`
+- `Google Gemini`
+- `Prisma`
+- `PostgreSQL`
+- `Stripe`
+- `Vitest`
 
----
+## Core Architecture
 
-## 🛠 Tech Stack
+- `app/`: App Router pages and API routes
+- `components/`: UI, media, AI, analytics, and video components
+- `lib/`: AI helpers, Cloudinary helpers, Prisma client, Stripe helpers, and trial logic
+- `prisma/`: schema and migrations
+- `__tests__/`: focused API and auth tests
 
-### Frontend
+## Main Routes
 
-- **Framework:** [Next.js 16.2.1](https://nextjs.org) - React-based framework with App Router
-- **UI Library:** [React 19.2.4](https://react.dev)
-- **Styling:** [Tailwind CSS 4](https://tailwindcss.com) with [DaisyUI 5.5.19](https://daisyui.com)
-- **Language:** [TypeScript 5](https://www.typescriptlang.org)
+### App routes
 
-### Backend & Database
+- `/home`: Asset library
+- `/video-upload`: Single image upload workflow
+- `/video-studio`: Video upload, analysis, captions, and conversion
+- `/ai-bg-removal`: Background removal
+- `/ai-gen-expand`: Generative fill
+- `/batch-process`: Batch image operations
+- `/analytics`: Business analytics dashboard
+- `/profile`: Account and subscription profile
+- `/pricing`: Subscription plans
 
-- **ORM:** [Prisma 7.5.0](https://www.prisma.io)
-- **Database:** PostgreSQL with [Prisma Adapter](https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#pgadapter)
-- **API Routes:** Next.js API Routes (App Router)
+### API routes
 
-### Authentication & External Services
+- `/api/image-upload`
+- `/api/videos`
+- `/api/videos/upload`
+- `/api/video/analyze`
+- `/api/video/captions`
+- `/api/video/convert`
+- `/api/ai/captions`
+- `/api/ai/audit`
+- `/api/search`
+- `/api/batch`
+- `/api/subscription/current`
+- `/api/stripe/checkout`
+- `/api/stripe/confirm`
+- `/api/stripe/portal`
+- `/api/stripe/webhook`
 
-- **Auth:** [Clerk 7.0.6](https://clerk.com) - Authentication & user management
-- **Media Processing:** [Cloudinary](https://cloudinary.com) - Video hosting and processing
+## Environment Variables
 
-### Development Tools
-
-- **Linting:** [ESLint 9](https://eslint.org)
-- **Package Manager:** npm / yarn / pnpm
-- **Environment Configuration:** dotenv
-
----
-
-## 📦 Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-- **Node.js** 18.17 or higher
-- **npm**, **yarn**, **pnpm**, or **bun** package manager
-- **PostgreSQL** 12 or higher (local or cloud-hosted)
-- **Git** for version control
-
-### Required Accounts
-
-- [Cloudinary](https://cloudinary.com) - For video hosting and processing
-- [Clerk](https://clerk.com) - For authentication
-- PostgreSQL database (local or cloud provider like Neon, Railway, etc.)
-
----
-
-## 🚀 Installation
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/yourusername/snaporbitai.git
-cd snaporbitai
-```
-
-### 2. Install Dependencies
-
-```bash
-npm install
-# or
-yarn install
-# or
-pnpm install
-```
-
-### 3. Set Up Environment Variables
-
-Create a `.env.local` file in the root directory (see [Environment Variables](#environment-variables) section below)
-
-### 4. Set Up the Database
-
-```bash
-npx prisma migrate dev
-```
-
-This command will:
-
-- Create the database schema
-- Apply all migrations
-- Generate Prisma Client
-
-### 5. Start Development Server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
-
----
-
-## 🔑 Environment Variables
-
-Create a `.env.local` file in the root directory with the following variables:
+Create `.env.local` with the following values:
 
 ```env
-# Database
-DATABASE_URL="postgresql://user:password@localhost:5432/cloudinary_saas"
+DATABASE_URL=
 
-# Clerk Authentication
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-CLERK_SECRET_KEY=your_clerk_secret_key
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/home
 NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/home
 
-# Cloudinary
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
-CLOUDINARY_API_KEY=your_cloudinary_api_key
-CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+GOOGLE_GENERATIVE_AI_API_KEY=
+GEMINI_VISION_MODEL=gemini-2.5-flash
+GEMINI_EMBEDDING_MODEL=gemini-embedding-001
+
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_PRO_MONTHLY_PRICE_ID=
+STRIPE_PRO_YEARLY_PRICE_ID=
+STRIPE_BUSINESS_MONTHLY_PRICE_ID=
+STRIPE_BUSINESS_YEARLY_PRICE_ID=
 ```
 
-### Getting API Keys
+## Local Development
 
-**Clerk:**
-
-1. Sign up at [clerk.com](https://clerk.com)
-2. Create a new application
-3. Copy keys from the API Keys section
-
-**Cloudinary:**
-
-1. Sign up at [cloudinary.com](https://cloudinary.com)
-2. Navigate to Settings → API Keys
-3. Copy your Cloud Name and API credentials
-
-**PostgreSQL:**
-
-- Local: `postgresql://localhost:5432/cloudinary_saas`
-- Cloud providers provide connection strings
-
----
-
-## 🎮 Getting Started
-
-### Available Scripts
-
-| Command         | Description                           |
-| --------------- | ------------------------------------- |
-| `npm run dev`   | Start development server on port 3000 |
-| `npm run build` | Build for production                  |
-| `npm start`     | Start production server               |
-| `npm run lint`  | Run ESLint to check code quality      |
-
-### Development Workflow
-
-1. **Start the development server:**
-
-   ```bash
-   npm run dev
-   ```
-
-2. **Navigate to the app:**
-   - Home: [http://localhost:3000](http://localhost:3000)
-   - Sign In: [http://localhost:3000/sign-in](http://localhost:3000/sign-in)
-   - Sign Up: [http://localhost:3000/sign-up](http://localhost:3000/sign-up)
-
-3. **Hot Reload:** Changes to files in `app/` directory are automatically reflected
-
-4. **Database Changes:**
-   ```bash
-   npx prisma migrate dev --name description_of_change
-   ```
-
----
-
-## 📁 Project Structure
-
-```
-snaporbitai/
-├── app/
-│   ├── (app)/                    # Protected app routes
-│   │   ├── home/                 # Dashboard
-│   │   ├── social-share/         # Social sharing interface
-│   │   └── video-upload/         # Video upload interface
-│   ├── (auth)/                   # Public auth routes
-│   │   ├── sign-in/              # Sign in page
-│   │   └── sign-up/              # Sign up page
-│   ├── api/
-│   │   └── videos/               # Video API endpoints
-│   ├── layout.tsx                # Root layout
-│   ├── page.tsx                  # Landing page
-│   └── globals.css               # Global styles
-├── prisma/
-│   ├── schema.prisma             # Database schema
-│   └── migrations/               # Database migrations
-├── lib/
-│   └── prisma.ts                 # Prisma client configuration
-├── public/                       # Static assets
-├── generated/
-│   └── prisma/                   # Generated Prisma types
-├── next.config.ts                # Next.js configuration
-├── tsconfig.json                 # TypeScript configuration
-├── package.json                  # Dependencies and scripts
-└── README.md                     # This file
-```
-
----
-
-## 🗄 Database Setup
-
-### Schema Overview
-
-The application uses a `Video` model to store video metadata:
-
-```prisma
-model Video {
-  id              String   @id @default(cuid())
-  title           String
-  description     String?
-  publicId        String
-  originalSize    String
-  compressedSize  String
-  duration        String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-```
-
-### Migrations
-
-To create a new migration after schema changes:
+### Install
 
 ```bash
-npx prisma migrate dev --name add_your_field_name
+npm install
 ```
 
-To reset the database (development only):
+### Database
 
 ```bash
-npx prisma migrate reset
+npx prisma migrate dev
+npx prisma generate
 ```
 
-To view database in Prisma Studio:
+### Run
 
 ```bash
-npx prisma studio
+npm run dev
 ```
 
----
+### Quality checks
 
-## 📡 API Documentation
-
-### Video Endpoints
-
-#### Get All Videos
-
-```http
-GET /api/videos
+```bash
+npm run lint
+npm run test
+npx tsc --noEmit
 ```
 
-#### Create Video
+## Production Deployment
 
-```http
-POST /api/videos
-Content-Type: application/json
+This project should be deployed as a full Node.js web application with PostgreSQL, not as a static site.
 
-{
-  "title": "My Video",
-  "description": "Video description",
-  "publicId": "cloudinary_public_id",
-  "originalSize": "50MB",
-  "compressedSize": "10MB",
-  "duration": "5:30"
-}
+### Recommended host
+
+**Best practical choice:** `Railway`
+
+Why Railway is a strong fit for this project:
+
+- Supports full `Next.js` server deployments
+- Works well with `PostgreSQL` and `Prisma`
+- Handles environment variables cleanly
+- Good fit for Stripe webhooks and server routes
+- Better suited than hobby-style serverless setups for buffered media uploads and longer AI requests
+
+### Other professional options
+
+- `Render`: solid managed web service + Postgres setup
+- `Fly.io`: best if you want more control over runtime behavior
+- `DigitalOcean App Platform`: good if you already use DigitalOcean services
+- `AWS ECS / App Runner`, `Azure Container Apps`, or a VPS: best for full infrastructure control
+
+### Not ideal for this project
+
+- Static-only hosting
+- Edge-only hosting
+- Platforms with very small request-body or execution-time limits
+
+This project includes:
+
+- file uploads proxied through the app
+- Stripe webhooks
+- Prisma database access
+- Cloudinary server uploads
+- Gemini video analysis requests that can take longer than typical short serverless invocations
+
+## Railway Deployment Checklist
+
+### 1. Create infrastructure
+
+- Create a new Railway project
+- Add a PostgreSQL service
+- Add a web service for this repo
+
+### 2. Configure build and start
+
+Use the default Node build flow or equivalent commands:
+
+```bash
+npm install
+npx prisma generate
+npm run build
+npm run start
 ```
 
-#### More endpoints coming soon...
+### 3. Run migrations
 
----
+On deploy, run:
 
-## 🤝 Contributing
+```bash
+npx prisma migrate deploy
+```
 
-Contributions are welcome! Please follow these steps:
+### 4. Set environment variables
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Add all variables from the `Environment Variables` section.
 
-### Code Style
+### 5. Configure third-party dashboards
 
-- Follow ESLint rules: `npm run lint`
-- Use TypeScript for type safety
-- Follow the existing component structure
-- Add comments for complex logic
+#### Clerk
 
----
+- Add your production domain
+- Set sign-in and sign-up URLs
+- Confirm redirect URLs point to your live app
 
-## 📝 License
+#### Stripe
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+- Create live products and prices
+- Set live price IDs in env vars
+- Point the live webhook to:
 
----
+```text
+https://your-domain.com/api/stripe/webhook
+```
 
-## 🆘 Support & Contact
+#### Cloudinary
 
-For support, email support@example.com or open an issue on GitHub.
+- Verify upload limits and credentials
+- Confirm the cloud name matches the delivery account you want to use
 
-**Report a Bug:** [GitHub Issues](https://github.com/yourusername/snaporbitai/issues)  
-**Feature Requests:** [GitHub Discussions](https://github.com/yourusername/snaporbitai/discussions)
+#### Gemini
 
----
+- Use a valid production API key with billing enabled if required
 
-## 🚀 Deployment
+## Production Readiness Notes
 
-### Vercel (Recommended)
+- Prisma `Subscription` is the source of truth for plan access
+- Stripe webhook support is still required in production
+- Free feature usage is tracked in `TrialUsage`
+- Image uploads are indexed for semantic search
+- Video analysis uses Gemini video understanding with inline upload for smaller files and Files API for larger files
 
-1. Push your code to GitHub
-2. Connect repository to [Vercel](https://vercel.com)
-3. Add environment variables in Vercel dashboard
-4. Deploy automatically on push
+## Suggested Domain Setup
 
-### Other Platforms
+For a real public website, use:
 
-- **Netlify:** [Deploy Next.js on Netlify](https://docs.netlify.com/frameworks-and-languages/next-js/)
-- **Railway:** [Railway Guide](https://railway.app)
-- **Self-hosted:** Use `npm run build && npm start`
+- `snaporbitai.com` or your brand domain
+- `app.yourdomain.com` for the product
+- `www.yourdomain.com` for the marketing site if you later split them
 
----
+A common setup:
 
-**Last Updated:** March 2026  
-**Version:** 0.1.0
+- Marketing: `www.yourdomain.com`
+- App: `app.yourdomain.com`
+- API and webhooks remain under the app domain
+
+## Scripts
+
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+npm run test
+```
+
+## Repository Notes
+
+- Local tooling folders such as `.clerk/` and `.vercel/` should not be committed
+- IDE-specific project notes can stay local and are now ignored through `.gitignore`
+- Unused starter assets were removed from `public/`
+
+## License
+
+Add your preferred license before public deployment.
