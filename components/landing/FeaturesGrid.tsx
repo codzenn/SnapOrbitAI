@@ -8,7 +8,7 @@ interface FeatureCardProps {
   tag: string;
   iconGradient: string;
   icon: string;
-  gridSpan: string;
+  gridSpan?: string;
   gridRowSpan?: string;
   delay: number;
   specialContent?: React.ReactNode;
