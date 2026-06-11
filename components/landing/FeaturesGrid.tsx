@@ -50,7 +50,7 @@ function FeatureCard({
   return (
     <div
       ref={ref}
-      className="scroll-reveal rounded-lg border p-7 hover:border-[#2A3F5F] transition-all duration-200 cursor-pointer group"
+      className="scroll-reveal rounded-lg border p-8 hover:border-[#2A3F5F] transition-all duration-200 cursor-pointer group flex flex-col h-full"
       style={{
         background: '#0E1420',
         borderColor: '#1E2D47',
@@ -67,7 +67,7 @@ function FeatureCard({
     >
       {/* Icon */}
       <div
-        className="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+        className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
         style={{ background: iconGradient }}
       >
         {icon}
@@ -75,16 +75,16 @@ function FeatureCard({
 
       {/* Title */}
       <h3
-        className="mt-4 font-semibold text-lg"
-        style={{ color: '#F0F4FF', fontFamily: 'Syne, sans-serif', fontSize: '18px' }}
+        className="mt-6 font-semibold text-lg"
+        style={{ color: '#F0F4FF', fontFamily: 'Syne, sans-serif', fontSize: '18px', lineHeight: '1.3' }}
       >
         {title}
       </h3>
 
       {/* Description */}
       <p
-        className="mt-2 text-sm leading-relaxed"
-        style={{ color: '#7A90B8', fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: '1.6' }}
+        className="mt-3 text-sm leading-relaxed flex-grow"
+        style={{ color: '#7A90B8', fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: '1.7', letterSpacing: '0.2px' }}
       >
         {description}
       </p>
@@ -94,7 +94,7 @@ function FeatureCard({
 
       {/* Tag */}
       <div
-        className="mt-6 pt-4 border-t text-xs"
+        className="mt-8 pt-4 border-t text-xs"
         style={{ color: '#3D5278', borderColor: '#1E2D47', fontFamily: 'JetBrains Mono, monospace', fontSize: '11px' }}
       >
         {tag}
@@ -105,10 +105,10 @@ function FeatureCard({
 
 export function FeaturesGrid() {
   return (
-    <section id="features" className="w-full py-20 md:py-28" style={{ background: '#080B11' }}>
-      <div className="max-w-7xl mx-auto px-6">
+    <section id="features" className="w-full py-24 md:py-32" style={{ background: '#080B11' }}>
+      <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-20">
           <div
             className="text-xs font-bold tracking-widest uppercase mb-4"
             style={{ color: '#3D5278', fontFamily: 'JetBrains Mono, monospace' }}
@@ -117,9 +117,9 @@ export function FeaturesGrid() {
           </div>
 
           <h2
-            className="mb-6"
+            className="mb-8"
             style={{
-              fontSize: 'clamp(28px, 4vw, 44px)',
+              fontSize: 'clamp(28px, 4vw, 48px)',
               color: '#F0F4FF',
               fontFamily: 'Syne, sans-serif',
               fontWeight: 700,
@@ -132,12 +132,13 @@ export function FeaturesGrid() {
           <p
             className="mx-auto"
             style={{
-              maxWidth: '580px',
+              maxWidth: '620px',
               color: '#7A90B8',
               fontFamily: 'Inter, sans-serif',
               fontSize: '16px',
               fontWeight: 400,
-              lineHeight: 1.6,
+              lineHeight: 1.75,
+              letterSpacing: '0.3px',
             }}
           >
             Six focused tools. One workspace. No switching between apps.
@@ -145,7 +146,7 @@ export function FeaturesGrid() {
         </div>
 
         {/* Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           {/* Card 1: Background Removal (6 cols, tall) */}
           <div className="md:col-span-6 md:row-span-2">
             <FeatureCard

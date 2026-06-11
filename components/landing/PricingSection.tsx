@@ -182,7 +182,7 @@ function PricingCard({ tier, isYearly }: { tier: PricingTier; isYearly: boolean 
 
       {/* Price Label */}
       <p
-        className="text-xs mb-5"
+        className="text-xs mb-6"
         style={{
           color: '#3D5278',
           fontFamily: 'Inter, sans-serif',
@@ -193,26 +193,27 @@ function PricingCard({ tier, isYearly }: { tier: PricingTier; isYearly: boolean 
 
       {/* Divider */}
       <div
-        className="my-5"
+        className="my-6"
         style={{
           borderTop: '1px solid #1E2D47',
         }}
       ></div>
 
       {/* Features List */}
-      <ul className="space-y-3 mb-8">
+      <ul className="space-y-4 mb-10">
         {tier.features.map((feature) => (
           <li
             key={feature}
-            className="text-sm flex items-start gap-2"
+            className="text-sm flex items-start gap-3"
             style={{
               color: '#7A90B8',
               fontFamily: 'Inter, sans-serif',
               fontSize: '14px',
+              lineHeight: '1.6',
             }}
           >
-            <span style={{ color: tier.accentColor, marginRight: '8px' }}>✓</span>
-            {feature}
+            <span style={{ color: tier.accentColor, marginRight: '4px', marginTop: '2px', flexShrink: 0 }}>✓</span>
+            <span>{feature}</span>
           </li>
         ))}
       </ul>
@@ -249,10 +250,10 @@ export function PricingSection() {
   const [isYearly, setIsYearly] = useState(false);
 
   return (
-    <section id="pricing" className="w-full py-20 md:py-28" style={{ background: '#080B11' }}>
+    <section id="pricing" className="w-full py-24 md:py-32" style={{ background: '#080B11' }}>
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-16">
           <div
             className="text-xs font-bold tracking-widest uppercase mb-4"
             style={{ color: '#3D5278', fontFamily: 'JetBrains Mono, monospace' }}
@@ -261,9 +262,9 @@ export function PricingSection() {
           </div>
 
           <h2
-            className="mb-6"
+            className="mb-8"
             style={{
-              fontSize: 'clamp(28px, 4vw, 44px)',
+              fontSize: 'clamp(28px, 4vw, 48px)',
               color: '#F0F4FF',
               fontFamily: 'Syne, sans-serif',
               fontWeight: 700,
@@ -277,7 +278,7 @@ export function PricingSection() {
         </div>
 
         {/* Monthly/Yearly Toggle */}
-        <div className="flex justify-center items-center gap-4 mb-12">
+        <div className="flex justify-center items-center gap-4 mb-16">
           <span
             style={{
               color: isYearly ? '#3D5278' : '#F0F4FF',
@@ -316,7 +317,7 @@ export function PricingSection() {
         </div>
 
         {/* Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           {pricingTiers.map((tier) => (
             <PricingCard key={tier.name} tier={tier} isYearly={isYearly} />
           ))}

@@ -37,7 +37,7 @@ function StepCard({ number, title, description, delay }: StepCardProps) {
   return (
     <div
       ref={ref}
-      className="scroll-reveal flex-1 rounded-lg border p-8 relative"
+      className="scroll-reveal flex-1 rounded-lg border p-10 relative"
       style={{
         background: '#0E1420',
         borderColor: '#1E2D47',
@@ -59,17 +59,17 @@ function StepCard({ number, title, description, delay }: StepCardProps) {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 mt-8">
+      <div className="relative z-10 mt-12">
         <h3
-          className="font-semibold mb-4"
-          style={{ color: '#F0F4FF', fontFamily: 'Syne, sans-serif', fontSize: '20px' }}
+          className="font-semibold mb-5"
+          style={{ color: '#F0F4FF', fontFamily: 'Syne, sans-serif', fontSize: '20px', lineHeight: '1.3' }}
         >
           {title}
         </h3>
 
         <p
           className="leading-relaxed"
-          style={{ color: '#7A90B8', fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.6 }}
+          style={{ color: '#7A90B8', fontFamily: 'Inter, sans-serif', fontSize: '14px', lineHeight: 1.75, letterSpacing: '0.2px' }}
         >
           {description}
         </p>
@@ -80,10 +80,10 @@ function StepCard({ number, title, description, delay }: StepCardProps) {
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="w-full py-20 md:py-28" style={{ background: '#080B11' }}>
+    <section id="how-it-works" className="w-full py-24 md:py-32" style={{ background: '#080B11' }}>
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-20">
           <div
             className="text-xs font-bold tracking-widest uppercase mb-4"
             style={{ color: '#3D5278', fontFamily: 'JetBrains Mono, monospace' }}
@@ -92,9 +92,9 @@ export function HowItWorks() {
           </div>
 
           <h2
-            className="mb-6"
+            className="mb-8"
             style={{
-              fontSize: 'clamp(28px, 4vw, 44px)',
+              fontSize: 'clamp(28px, 4vw, 48px)',
               color: '#F0F4FF',
               fontFamily: 'Syne, sans-serif',
               fontWeight: 700,
@@ -109,12 +109,13 @@ export function HowItWorks() {
           <p
             className="mx-auto"
             style={{
-              maxWidth: '580px',
+              maxWidth: '620px',
               color: '#7A90B8',
               fontFamily: 'Inter, sans-serif',
               fontSize: '16px',
               fontWeight: 400,
-              lineHeight: 1.6,
+              lineHeight: 1.75,
+              letterSpacing: '0.3px',
             }}
           >
             No credit card. No time limit. One trial use of every feature before you decide to upgrade.
@@ -122,7 +123,7 @@ export function HowItWorks() {
         </div>
 
         {/* Steps Container */}
-        <div className="flex flex-col md:flex-row gap-6 items-stretch">
+        <div className="flex flex-col md:flex-row gap-8 items-stretch">
           {/* Arrow - visible only on desktop between cards */}
           <div className="hidden md:flex items-center justify-center absolute left-1/3 top-1/2">
             <div style={{ color: '#2A3F5F', fontSize: '24px' }}>→</div>

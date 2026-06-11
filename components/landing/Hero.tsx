@@ -67,7 +67,7 @@ export function Hero() {
       <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
         {/* Eyebrow badge */}
         <div
-          className="inline-block px-4 py-2 rounded-full border mb-8 font-mono text-xs tracking-widest"
+          className="inline-block px-4 py-2.5 rounded-full border mb-12 font-mono text-xs tracking-widest"
           style={{
             background: 'rgba(79, 142, 247, 0.08)',
             borderColor: '#2A3F5F',
@@ -79,12 +79,13 @@ export function Hero() {
 
         {/* Headline with gradient "AI" */}
         <h1
-          className="mb-6 font-bold leading-tight"
+          className="mb-8 font-bold leading-relaxed"
           style={{
             fontSize: 'clamp(44px, 7vw, 80px)',
             color: '#F0F4FF',
             fontFamily: 'Syne, sans-serif',
             fontWeight: 800,
+            lineHeight: '1.15',
           }}
         >
           Your media, transformed by{' '}
@@ -103,13 +104,15 @@ export function Hero() {
 
         {/* Subheadline */}
         <p
-          className="mx-auto mb-12 leading-relaxed"
+          className="mx-auto mb-16 leading-relaxed"
           style={{
-            maxWidth: '580px',
+            maxWidth: '640px',
             fontSize: 'clamp(16px, 2vw, 20px)',
             color: '#7A90B8',
             fontFamily: 'Inter, sans-serif',
             fontWeight: 400,
+            lineHeight: '1.75',
+            letterSpacing: '0.3px',
           }}
         >
           Remove backgrounds, expand images, generate captions, analyze quality, and search your assets — all in one
@@ -117,7 +120,7 @@ export function Hero() {
         </p>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col md:flex-row gap-4 justify-center mb-16">
+        <div className="flex flex-col md:flex-row gap-5 justify-center mb-20">
           <Link
             href="/sign-up"
             className="px-7 py-3 rounded-lg font-medium text-base transition-all duration-200"
@@ -162,7 +165,7 @@ export function Hero() {
 
         {/* Tech stack badges */}
         <div
-          className="flex flex-wrap gap-3 justify-center mb-16 opacity-70"
+          className="flex flex-wrap gap-3 justify-center mb-24 opacity-70"
           style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px' }}
         >
           {['Gemini 2.5 Flash', 'Cloudinary AI', 'Next.js', 'Prisma', 'Clerk Auth'].map((tech) => (
