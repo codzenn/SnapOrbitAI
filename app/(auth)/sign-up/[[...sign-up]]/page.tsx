@@ -61,7 +61,11 @@ export default function Page() {
           </section>
 
           <section className="flex items-center justify-center px-4 py-8 md:px-8 md:py-10 bg-black/20">
-            <SignUp appearance={{
+            <SignUp
+              fallbackRedirectUrl="/home"
+              forceRedirectUrl="/home"
+              signInUrl="/sign-in"
+              appearance={{
               elements: {
                 rootBox: "mx-auto w-full",
                 card: "bg-black/60 border border-white/10 backdrop-blur-md shadow-2xl rounded-2xl",
