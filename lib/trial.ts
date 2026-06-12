@@ -166,7 +166,13 @@ export async function getUserPlan(userId: string): Promise<AppPlan> {
     return "free";
   }
 
-  if (subscription.status !== "active" && subscription.status !== "trialing") {
+  const activeStatuses = new Set(["active", "authenticated", "trialing"]);
+
+  if (!activeStatuses.has(subscription.status)) {
+    return "free";
+  }
+
+  if (subscription.currentPeriodEnd <= new Date()) {
     return "free";
   }
 

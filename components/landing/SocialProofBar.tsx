@@ -1,5 +1,5 @@
 export function SocialProofBar() {
-  const partners = ["Gemini", "Cloudinary", "Stripe", "Clerk", "Prisma", "Next.js"];
+  const partners = ["Gemini", "Cloudinary", "Razorpay", "Clerk", "Prisma", "Next.js"];
   const metrics = [
     { value: "Backgrounds", label: "removed by Cloudinary AI" },
     { value: "Captions", label: "generated with Gemini vision" },

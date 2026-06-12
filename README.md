@@ -14,7 +14,7 @@ The product is designed for a modern media workflow: upload content, clean it up
 - Video analysis with summaries, scenes, topics, mood, audio detection, and key quotes
 - Video captions, compression, and aspect-ratio conversion
 - Clerk authentication for protected user workspaces
-- Stripe subscriptions with Free, Pro, and Business plans
+- Razorpay Subscriptions with Free, Pro, and Business plans priced for India
 - Prisma/PostgreSQL persistence for assets, trials, and subscriptions
 - Analytics dashboard for Business usage visibility
 
@@ -28,7 +28,7 @@ The product is designed for a modern media workflow: upload content, clean it up
 | Media | Cloudinary, next-cloudinary |
 | AI | Google Gemini |
 | Database | PostgreSQL, Prisma 7 |
-| Billing | Stripe |
+| Billing | Razorpay |
 | Testing | Vitest, Testing Library |
 | Charts | Recharts |
 
@@ -67,10 +67,9 @@ The product is designed for a modern media workflow: upload content, clean it up
 - `POST /api/video/captions`
 - `POST /api/video/convert`
 - `GET /api/subscription/current`
-- `POST /api/stripe/checkout`
-- `POST /api/stripe/confirm`
-- `POST /api/stripe/portal`
-- `POST /api/stripe/webhook`
+- `POST /api/razorpay/create-subscription`
+- `POST /api/razorpay/verify`
+- `POST /api/razorpay/webhook`
 - `POST /api/auth/auto-logout`
 
 ## Plans and Access
@@ -83,7 +82,7 @@ SnapOrbitAI uses Prisma as the source of truth for subscription state.
 | Pro | Solo creators and marketers | Higher asset limit and recurring AI usage |
 | Business | Teams and high-volume users | Unlimited-style workflows, analytics, and higher batch limits |
 
-Free trial usage is tracked in the `TrialUsage` model. Subscription records are stored in the `Subscription` model and synchronized through Stripe checkout, confirmation, portal, and webhook routes.
+Free trial usage is tracked in the `TrialUsage` model. Razorpay plan IDs are configured through environment variables, and each checkout creates a Razorpay subscription for the selected monthly or yearly plan.
 
 ## Project Structure
 
@@ -114,7 +113,7 @@ lib/
   embeddings.ts          Semantic search utilities
   media-ai.ts            AI parsing helpers
   prisma.ts              Prisma client
-  stripe.ts              Stripe client
+  razorpay.ts            Razorpay plans, API calls, and signature checks
   trial.ts               Plan and trial access logic
 
 prisma/
@@ -132,7 +131,7 @@ __tests__/
 | --- | --- |
 | `Video` | Stores uploaded image/video assets, Cloudinary IDs, AI metadata, quality scores, captions, embeddings, and video analysis fields |
 | `TrialUsage` | Tracks limited free usage by user and feature |
-| `Subscription` | Stores Stripe customer/subscription IDs, plan, status, and renewal period |
+| `Subscription` | Stores Razorpay plan, subscription, customer, and payment metadata with plan status and renewal period |
 
 Prisma Client is generated into `generated/prisma`.
 
@@ -160,12 +159,13 @@ GOOGLE_GENERATIVE_AI_API_KEY=
 GEMINI_VISION_MODEL=gemini-2.5-flash
 GEMINI_EMBEDDING_MODEL=gemini-embedding-001
 
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-STRIPE_PRO_MONTHLY_PRICE_ID=
-STRIPE_PRO_YEARLY_PRICE_ID=
-STRIPE_BUSINESS_MONTHLY_PRICE_ID=
-STRIPE_BUSINESS_YEARLY_PRICE_ID=
+NEXT_PUBLIC_RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+RAZORPAY_WEBHOOK_SECRET=
+RAZORPAY_PRO_MONTHLY_PLAN_ID=
+RAZORPAY_PRO_YEARLY_PLAN_ID=
+RAZORPAY_BUSINESS_MONTHLY_PLAN_ID=
+RAZORPAY_BUSINESS_YEARLY_PLAN_ID=
 ```
 
 ## Local Development
@@ -177,7 +177,7 @@ STRIPE_BUSINESS_YEARLY_PRICE_ID=
 - Clerk application
 - Cloudinary account
 - Google AI API key
-- Stripe account for billing flows
+- Razorpay account for billing flows
 
 ### Install Dependencies
 
@@ -216,21 +216,35 @@ npm run test     # Run Vitest tests
 npx tsc --noEmit
 ```
 
-## Stripe Webhooks
+## Razorpay Webhooks
 
-For local webhook testing, forward Stripe events to:
+For local webhook testing, forward Razorpay subscription events to:
 
 ```text
-http://localhost:3000/api/stripe/webhook
+http://localhost:3000/api/razorpay/webhook
 ```
 
 For production:
 
 ```text
-https://your-domain.com/api/stripe/webhook
+https://your-domain.com/api/razorpay/webhook
 ```
 
-Set the resulting webhook signing secret as `STRIPE_WEBHOOK_SECRET`.
+Set the resulting webhook signing secret as `RAZORPAY_WEBHOOK_SECRET`.
+
+Recommended events:
+
+```text
+subscription.authenticated
+subscription.activated
+subscription.charged
+subscription.pending
+subscription.halted
+subscription.paused
+subscription.resumed
+subscription.cancelled
+subscription.completed
+```
 
 ## Deployment
 
@@ -256,7 +270,7 @@ Production deployment checklist:
 7. Start with `npm run start`.
 8. Configure Clerk production URLs.
 9. Configure Cloudinary credentials and upload limits.
-10. Configure Stripe live products, prices, and webhook endpoint.
+10. Configure Razorpay live API keys, subscription plan IDs, and webhook endpoint.
 11. Confirm Gemini API access and billing readiness.
 
 ## Contributor Notes
@@ -278,7 +292,7 @@ Useful docs for this codebase:
 - API behavior is covered by focused Vitest tests.
 - Auth helper behavior has dedicated tests.
 - Media and AI flows should be tested with real provider credentials before production launch.
-- Stripe subscription behavior should be validated with test-mode checkout and webhook events.
+- Razorpay subscription behavior should be validated with test-mode subscription checkout and webhook events.
 
 ## Branding
 

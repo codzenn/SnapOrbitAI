@@ -136,7 +136,7 @@ export default async function ProfilePage() {
                   <p className="text-sm font-semibold text-white">Plan status</p>
                 </div>
                 <p className="text-sm text-neutral-400">
-                  {planLabel} plan · {subscriptionStatus}
+                  {planLabel} plan - {subscriptionStatus}
                 </p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -147,8 +147,8 @@ export default async function ProfilePage() {
                 <p className="text-sm text-neutral-400">{renewalLabel}</p>
               </div>
               <Button asChild className="w-full bg-white text-black hover:bg-neutral-200">
-                <Link href={plan === "business" ? "/analytics" : "/pricing"}>
-                  {plan === "business" ? "Open billing tools" : "View plans"}
+                <Link href="/pricing">
+                  {plan === "free" ? "View plans" : "Renew or change plan"}
                 </Link>
               </Button>
             </CardContent>

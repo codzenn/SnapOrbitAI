@@ -32,7 +32,7 @@ export function Hero() {
         <div className="max-w-3xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#64d6c1]/25 bg-white/5 px-3 py-1.5 text-sm font-medium text-[#9ff3e3] shadow-sm">
             <Sparkles className="size-4" />
-            Gemini vision, Cloudinary AI, and Stripe billing in one workflow
+            Gemini vision, Cloudinary AI, and Razorpay billing in one workflow
           </div>
 
           <h1 className="mt-8 max-w-3xl text-5xl font-semibold leading-[1.02] text-white sm:text-6xl lg:text-7xl">

@@ -10,16 +10,15 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "@base-ui/react": "^1.4.1",
     "@clerk/nextjs": "^7.0.6",
     "@distube/ytdl-core": "^4.16.12",
+    "@google/generative-ai": "^0.24.1",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
     "@radix-ui/react-slot": "^1.2.4",
     "@splinetool/react-spline": "^4.1.0",
     "@splinetool/runtime": "^1.12.87",
-    "@stripe/stripe-js": "^9.7.0",
     "axios": "^1.13.6",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.9.0",
@@ -37,7 +36,6 @@
     "react-dom": "19.2.4",
     "recharts": "^3.8.1",
     "sonner": "^2.0.7",
-    "stripe": "^22.2.0",
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {

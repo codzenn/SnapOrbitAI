@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import {
   Bar,
   BarChart,
@@ -40,35 +40,9 @@ export default function UsageDashboard({
   chartData,
   currentPeriodEnd,
 }: UsageDashboardProps) {
-  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
   const renewalDateLabel = currentPeriodEnd
     ? renewalDateFormatter.format(new Date(currentPeriodEnd))
     : "Unavailable";
-
-  const handleManageSubscription = async () => {
-    setIsOpeningPortal(true);
-
-    try {
-      const response = await fetch("/api/stripe/portal", {
-        method: "POST",
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Could not open the customer portal.");
-      }
-
-      const newTab = window.open(data.url, "_blank", "noopener,noreferrer");
-
-      if (!newTab) {
-        throw new Error("Popup blocked. Please allow popups and try again.");
-      }
-    } catch (error) {
-      console.error("[UsageDashboard] portal error:", error);
-    } finally {
-      setIsOpeningPortal(false);
-    }
-  };
 
   return (
     <div className="space-y-8">
@@ -172,12 +146,8 @@ export default function UsageDashboard({
             <p className="text-sm text-neutral-400">
               Renewal date: {renewalDateLabel}
             </p>
-            <Button
-              type="button"
-              onClick={() => void handleManageSubscription()}
-              className="bg-white text-black hover:bg-neutral-200"
-            >
-              {isOpeningPortal ? "Opening portal..." : "Manage subscription"}
+            <Button asChild className="bg-white text-black hover:bg-neutral-200">
+              <Link href="/pricing">Renew or change plan</Link>
             </Button>
           </CardContent>
         </Card>

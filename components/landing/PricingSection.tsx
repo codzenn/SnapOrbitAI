@@ -21,8 +21,8 @@ const pricingTiers: PricingTier[] = [
     id: "free",
     name: "Free",
     description: "For testing the full workflow before you commit.",
-    monthly: "$0",
-    yearly: "$0",
+    monthly: "INR 0",
+    yearly: "INR 0",
     period: "forever",
     features: [
       "One trial use of every major feature",
@@ -37,8 +37,8 @@ const pricingTiers: PricingTier[] = [
     id: "pro",
     name: "Pro",
     description: "For solo creators and marketers using AI media every week.",
-    monthly: "$12",
-    yearly: "$99",
+    monthly: "INR 299",
+    yearly: "INR 2,949",
     period: "per month",
     highlight: true,
     features: [
@@ -54,15 +54,15 @@ const pricingTiers: PricingTier[] = [
     id: "business",
     name: "Business",
     description: "For teams that need more batch volume and usage visibility.",
-    monthly: "$29",
-    yearly: "$249",
+    monthly: "INR 799",
+    yearly: "INR 8,449",
     period: "per month",
     features: [
       "Everything in Pro",
       "Batch processing up to 25 images",
       "Unlimited searches and conversions",
       "Usage analytics dashboard",
-      "Priority support and Stripe portal",
+      "Priority support and Razorpay subscriptions",
     ],
     cta: "Start Business",
   },
@@ -151,7 +151,7 @@ export function PricingSection() {
             </h2>
             <p className="mt-5 max-w-2xl text-base leading-7 text-[#a7b8b4]">
               Clear plans for testing, daily solo work, and higher-volume teams.
-              Paid checkout runs through Stripe.
+              Paid subscriptions run through Razorpay for Indian payments.
             </p>
           </div>
 
@@ -184,8 +184,8 @@ export function PricingSection() {
         </div>
 
         <div className="mt-8 rounded-lg border border-white/10 bg-[#0b1110] p-5 text-sm leading-6 text-[#a7b8b4]">
-          Secure checkout via Stripe. Cancel from the customer portal. Free
-          users can test the core workflow before choosing a paid plan.
+          Secure recurring billing via Razorpay. Free users can test the core workflow
+          before choosing a paid plan.
         </div>
       </div>
     </section>

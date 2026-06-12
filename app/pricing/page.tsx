@@ -4,30 +4,122 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Check, Loader2, Sparkles } from "lucide-react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { BrandMark } from "@/components/BrandMark";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 type BillingCycle = "monthly" | "yearly";
+type PaidPlan = "pro" | "business";
 
-const PRICE_IDS = {
-  pro: {
-    monthly: "pro_monthly",
-    yearly: "pro_yearly",
-  },
-  business: {
-    monthly: "business_monthly",
-    yearly: "business_yearly",
-  },
-} as const;
+const RAZORPAY_SCRIPT_URL = "https://checkout.razorpay.com/v1/checkout.js";
+
+type RazorpaySubscriptionResponse = {
+  keyId: string;
+  subscriptionId: string;
+  amount: number;
+  displayAmount: string;
+  currency: "INR";
+  plan: PaidPlan;
+  cycle: BillingCycle;
+  name: string;
+  description: string;
+  error?: string;
+};
+
+type RazorpayCheckoutResponse = {
+  razorpay_payment_id: string;
+  razorpay_subscription_id: string;
+  razorpay_signature: string;
+};
+
+type RazorpayFailureResponse = {
+  error?: {
+    description?: string;
+    reason?: string;
+  };
+};
+
+type RazorpayCheckoutOptions = {
+  key: string;
+  name: string;
+  description: string;
+  subscription_id: string;
+  prefill?: {
+    name?: string;
+    email?: string;
+  };
+  theme?: {
+    color?: string;
+  };
+  modal?: {
+    ondismiss?: () => void;
+  };
+  handler: (response: RazorpayCheckoutResponse) => void | Promise<void>;
+};
+
+type RazorpayInstance = {
+  open: () => void;
+  on: (
+    event: "payment.failed",
+    callback: (response: RazorpayFailureResponse) => void,
+  ) => void;
+};
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: RazorpayCheckoutOptions) => RazorpayInstance;
+  }
+}
+
+function loadRazorpayScript() {
+  if (typeof window === "undefined") {
+    return Promise.reject(
+      new Error("Razorpay checkout is only available in the browser."),
+    );
+  }
+
+  if (window.Razorpay) {
+    return Promise.resolve();
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      `script[src="${RAZORPAY_SCRIPT_URL}"]`,
+    );
+
+    if (existingScript) {
+      existingScript.addEventListener("load", () => resolve(), { once: true });
+      existingScript.addEventListener(
+        "error",
+        () => reject(new Error("Could not load Razorpay checkout.")),
+        { once: true },
+      );
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = RAZORPAY_SCRIPT_URL;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Could not load Razorpay checkout."));
+    document.body.appendChild(script);
+  });
+}
 
 const PRICING = [
   {
     id: "free",
     name: "Free",
-    monthly: "$0",
-    yearly: "$0",
+    monthly: "INR 0",
+    yearly: "INR 0",
     highlight: false,
     description: "For trying the core workflow with limited usage.",
     cta: "Start Free",
@@ -43,8 +135,8 @@ const PRICING = [
   {
     id: "pro",
     name: "Pro",
-    monthly: "$12",
-    yearly: "$99",
+    monthly: "INR 299",
+    yearly: "INR 2,949",
     description: "For solo creators and marketers running daily AI workflows.",
     cta: "Start Pro",
     highlight: true,
@@ -63,8 +155,8 @@ const PRICING = [
   {
     id: "business",
     name: "Business",
-    monthly: "$29",
-    yearly: "$249",
+    monthly: "INR 799",
+    yearly: "INR 8,449",
     highlight: false,
     description: "For teams that need unlimited workflows and analytics.",
     cta: "Start Business",
@@ -73,7 +165,7 @@ const PRICING = [
       "Batch processing up to 25 images",
       "Unlimited aspect ratio conversions",
       "Business usage analytics dashboard",
-      "Stripe customer portal access",
+      "Razorpay payment support",
       "Priority support",
     ],
   },
@@ -81,6 +173,7 @@ const PRICING = [
 
 function PricingContent() {
   const { isLoaded, isSignedIn } = useAuth();
+  const { user } = useUser();
   const searchParams = useSearchParams();
   const [cycle, setCycle] = useState<BillingCycle>("monthly");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
@@ -91,12 +184,12 @@ function PricingContent() {
   const subtitle = useMemo(
     () =>
       cycle === "monthly"
-        ? "Billed monthly. Cancel any time."
-        : "Billed yearly. Save more over 12 months.",
+        ? "INR pricing for Indian creators and teams."
+        : "Yearly access with better value over 12 months.",
     [cycle],
   );
 
-  const startCheckout = useCallback(async (planId: "pro" | "business") => {
+  const startCheckout = useCallback(async (planId: PaidPlan) => {
     if (!isSignedIn) {
       window.location.href = `/sign-up?redirect_url=${encodeURIComponent(`/pricing?plan=${planId}`)}`;
       return;
@@ -106,31 +199,87 @@ function PricingContent() {
       setLoadingPlan(planId);
       setError(null);
 
-      const response = await fetch("/api/stripe/checkout", {
+      await loadRazorpayScript();
+
+      const response = await fetch("/api/razorpay/create-subscription", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          priceId: PRICE_IDS[planId][cycle],
+          plan: planId,
+          cycle,
         }),
       });
-      const data = await response.json();
+      const data = (await response.json()) as RazorpaySubscriptionResponse;
 
-      if (!response.ok || !data.url) {
-        throw new Error(data.error || "Could not start Stripe checkout.");
+      if (!response.ok || !data.subscriptionId || !data.keyId || !window.Razorpay) {
+        throw new Error(data.error || "Could not start Razorpay subscription.");
       }
 
-      window.location.href = data.url;
+      const checkout = new window.Razorpay({
+        key: data.keyId,
+        name: "SnapOrbitAI",
+        description: `${data.name} - ${data.displayAmount}`,
+        subscription_id: data.subscriptionId,
+        prefill: {
+          name: user?.fullName || user?.username || "",
+          email: user?.primaryEmailAddress?.emailAddress || "",
+        },
+        theme: {
+          color: "#64d6c1",
+        },
+        modal: {
+          ondismiss: () => setLoadingPlan(null),
+        },
+        handler: async (paymentResponse) => {
+          try {
+            const verifyResponse = await fetch("/api/razorpay/verify", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(paymentResponse),
+            });
+            const verifyData = await verifyResponse.json();
+
+            if (!verifyResponse.ok) {
+              throw new Error(
+                verifyData.error || "Could not verify Razorpay subscription.",
+              );
+            }
+
+            window.location.href = `/home?upgraded=true&plan=${verifyData.plan}`;
+          } catch (verificationError) {
+            setError(
+              verificationError instanceof Error
+                ? verificationError.message
+                : "Could not verify Razorpay subscription.",
+            );
+            setLoadingPlan(null);
+          }
+        },
+      });
+
+      checkout.on("payment.failed", (failure) => {
+        setError(
+          failure.error?.description ||
+            failure.error?.reason ||
+            "Razorpay subscription payment failed. Please try again.",
+        );
+        setLoadingPlan(null);
+      });
+
+      checkout.open();
     } catch (checkoutError) {
       setError(
         checkoutError instanceof Error
           ? checkoutError.message
-          : "Could not start Stripe checkout.",
+          : "Could not start Razorpay subscription.",
       );
       setLoadingPlan(null);
     }
-  }, [cycle, isSignedIn]);
+  }, [cycle, isSignedIn, user]);
 
   useEffect(() => {
     if (!isLoaded || !autoPlan || !isSignedIn) {
@@ -164,7 +313,7 @@ function PricingContent() {
         <div className="text-center">
           <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm text-neutral-300">
             <Sparkles className="size-4" />
-            Flexible plans for every stage
+            Razorpay subscriptions for Indian payments
           </div>
           <h1 className="mt-6 text-4xl font-extrabold tracking-tight md:text-5xl">
             Pricing Plans
@@ -259,14 +408,14 @@ function PricingContent() {
                 ) : (
                   <Button
                     type="button"
-                    onClick={() => void startCheckout(plan.id as "pro" | "business")}
-                    disabled={loadingPlan !== null}
+                    onClick={() => void startCheckout(plan.id as PaidPlan)}
+                    disabled={loadingPlan !== null || !isLoaded}
                     className="w-full bg-white text-black hover:bg-neutral-200 disabled:bg-white/20 disabled:text-white/50"
                   >
                     {loadingPlan === plan.id ? (
                       <>
                         <Loader2 className="mr-2 size-4 animate-spin" />
-                        Redirecting...
+                        Starting subscription...
                       </>
                     ) : (
                       plan.cta
@@ -282,15 +431,15 @@ function PricingContent() {
           {[
             {
               question: "What happens after the free trial?",
-              answer: "Upgrade to Pro ($12/mo) or Business ($29/mo) for unlimited image AI, plus Video Studio access and higher conversion limits.",
+              answer: "Upgrade to Pro (INR 299/mo) or Business (INR 799/mo) for unlimited image AI, Video Studio access, and higher conversion limits.",
             },
             {
               question: "Is there a free trial for Pro or Business?",
               answer: "No, but the free plan lets you test every major workflow once before upgrading.",
             },
             {
-              question: "Can I cancel anytime?",
-              answer: "Yes. Manage or cancel your subscription from the Stripe customer portal.",
+              question: "How is the payment verified?",
+              answer: "Razorpay returns the subscription payment details after checkout, and SnapOrbitAI verifies the signature server-side before activating recurring access.",
             },
           ].map((item) => (
             <Card key={item.question} className="border-white/10 bg-black/40 text-white backdrop-blur-sm">

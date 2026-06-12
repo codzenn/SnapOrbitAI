@@ -190,65 +190,25 @@ export default function AppLayout({
 
     const params = new URLSearchParams(window.location.search);
     const upgraded = params.get("upgraded");
-    const sessionId = params.get("session_id");
+    const plan = params.get("plan");
 
-    if (upgraded !== "true" || !sessionId) {
+    if (upgraded !== "true") {
       return;
     }
 
-    let cancelled = false;
+    toast.success(
+      plan === "business"
+        ? "Business plan is active."
+        : plan === "pro"
+          ? "Pro plan is active."
+          : "Plan updated successfully.",
+      {
+        description:
+          "Razorpay subscription was verified and your workspace has been updated.",
+      },
+    );
 
-    const confirmCheckout = async () => {
-      try {
-        const response = await fetch("/api/stripe/confirm", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ sessionId }),
-        });
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || "Could not confirm the upgraded plan.");
-        }
-
-        if (!cancelled && typeof data.plan === "string") {
-          setCurrentPlan(data.plan);
-          toast.success(
-            data.plan === "business"
-              ? "Business plan is active."
-              : data.plan === "pro"
-                ? "Pro plan is active."
-                : "Plan updated successfully.",
-            {
-              description:
-                "Payment succeeded and your workspace has been updated.",
-            },
-          );
-        }
-      } catch (error) {
-        console.error("[AppLayout] checkout confirmation failed:", error);
-        if (!cancelled) {
-          toast.error("Payment succeeded, but plan sync needs attention.", {
-            description:
-              error instanceof Error
-                ? error.message
-                : "Please refresh once or check your Stripe webhook setup.",
-          });
-        }
-      } finally {
-        if (!cancelled) {
-          router.replace(pathname);
-        }
-      }
-    };
-
-    void confirmCheckout();
-
-    return () => {
-      cancelled = true;
-    };
+    router.replace(pathname);
   }, [pathname, router]);
 
   return (

@@ -55,13 +55,20 @@ model TrialUsage {
 }
 
 model Subscription {
-  id                   String   @id @default(cuid())
-  userId               String   @unique
-  stripeCustomerId     String   @unique
-  stripeSubscriptionId String   @unique
-  plan                 String
-  status               String
-  currentPeriodEnd     DateTime
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  provider          String   @default("razorpay")
+  razorpayOrderId   String?  @unique
+  razorpayPlanId    String?
+  razorpaySubscriptionId String? @unique
+  razorpayCustomerId String?
+  razorpayPaymentId String?  @unique
+  plan              String
+  billingCycle      String   @default("monthly")
+  amount            Int      @default(0)
+  currency          String   @default("INR")
+  status            String
+  currentPeriodEnd  DateTime
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
