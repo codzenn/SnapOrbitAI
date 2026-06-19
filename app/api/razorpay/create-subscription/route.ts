@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
 import {
   createRazorpaySubscription,
   formatInr,
-  getPeriodEndDate,
   getRazorpayPlan,
 } from "@/lib/razorpay";
 
@@ -27,40 +25,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const { keyId, planId, subscription } =
+    const { keyId, subscription } =
       await createRazorpaySubscription({
         userId,
         config,
       });
-
-    await prisma.subscription.upsert({
-      where: { userId },
-      create: {
-        userId,
-        provider: "razorpay",
-        razorpayPlanId: planId,
-        razorpaySubscriptionId: subscription.id,
-        razorpayCustomerId: subscription.customer_id ?? null,
-        plan: config.plan,
-        billingCycle: config.cycle,
-        amount: config.amount,
-        currency: config.currency,
-        status: subscription.status,
-        currentPeriodEnd: getPeriodEndDate(config),
-      },
-      update: {
-        provider: "razorpay",
-        razorpayPlanId: planId,
-        razorpaySubscriptionId: subscription.id,
-        razorpayCustomerId: subscription.customer_id ?? null,
-        plan: config.plan,
-        billingCycle: config.cycle,
-        amount: config.amount,
-        currency: config.currency,
-        status: subscription.status,
-        currentPeriodEnd: getPeriodEndDate(config),
-      },
-    });
 
     return NextResponse.json({
       keyId,

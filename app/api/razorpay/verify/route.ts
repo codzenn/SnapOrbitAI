@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import {
   fetchRazorpaySubscription,
+  findPlanByRazorpayPlanId,
   getRazorpayPlan,
   getSubscriptionPeriodEnd,
   verifyRazorpaySubscriptionSignature,
@@ -51,14 +52,7 @@ export async function POST(request: Request) {
       where: { razorpaySubscriptionId: subscriptionId },
     });
 
-    if (!existingSubscription) {
-      return NextResponse.json(
-        { error: "Subscription not found." },
-        { status: 404 },
-      );
-    }
-
-    if (existingSubscription.userId !== userId) {
+    if (existingSubscription && existingSubscription.userId !== userId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -69,24 +63,20 @@ export async function POST(request: Request) {
     });
 
     if (!isAuthentic) {
-      await prisma.subscription.update({
-        where: { razorpaySubscriptionId: subscriptionId },
-        data: {
-          status: "signature_failed",
-          razorpayPaymentId: paymentId,
-        },
-      });
-
       return NextResponse.json(
         { error: "Invalid Razorpay signature." },
         { status: 400 },
       );
     }
 
-    const config = getRazorpayPlan(
-      existingSubscription.plan,
-      existingSubscription.billingCycle,
-    );
+    const razorpaySubscription =
+      await fetchRazorpaySubscription(subscriptionId);
+    const config = existingSubscription
+      ? getRazorpayPlan(
+          existingSubscription.plan,
+          existingSubscription.billingCycle,
+        )
+      : findPlanByRazorpayPlanId(razorpaySubscription.plan_id);
 
     if (!config) {
       return NextResponse.json(
@@ -95,19 +85,45 @@ export async function POST(request: Request) {
       );
     }
 
-    const razorpaySubscription =
-      await fetchRazorpaySubscription(subscriptionId);
+    const subscriptionUserId =
+      existingSubscription?.userId || razorpaySubscription.notes?.userId;
+
+    if (subscriptionUserId !== userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const status = normalizeVerifiedStatus(razorpaySubscription.status);
     const currentPeriodEnd = getSubscriptionPeriodEnd(
       razorpaySubscription,
       config,
     );
 
-    await prisma.subscription.update({
-      where: { razorpaySubscriptionId: subscriptionId },
-      data: {
+    await prisma.subscription.upsert({
+      where: { userId },
+      create: {
+        userId,
+        provider: "razorpay",
+        razorpayPlanId: razorpaySubscription.plan_id,
+        razorpaySubscriptionId: subscriptionId,
         razorpayPaymentId: paymentId,
         razorpayCustomerId: razorpaySubscription.customer_id ?? null,
+        plan: config.plan,
+        billingCycle: config.cycle,
+        amount: config.amount,
+        currency: config.currency,
+        status,
+        currentPeriodEnd,
+      },
+      update: {
+        provider: "razorpay",
+        razorpayPlanId: razorpaySubscription.plan_id,
+        razorpaySubscriptionId: subscriptionId,
+        razorpayPaymentId: paymentId,
+        razorpayCustomerId: razorpaySubscription.customer_id ?? null,
+        plan: config.plan,
+        billingCycle: config.cycle,
+        amount: config.amount,
+        currency: config.currency,
         status,
         currentPeriodEnd,
       },

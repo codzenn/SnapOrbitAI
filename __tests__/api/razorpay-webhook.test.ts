@@ -153,6 +153,21 @@ describe("POST /api/razorpay/webhook", () => {
     });
   });
 
+  it("ignores inactive events for checkout attempts that are not the current subscription", async () => {
+    vi.mocked(headers).mockResolvedValue(
+      new Headers({ "x-razorpay-signature": "sig_good" }),
+    );
+    vi.mocked(verifyRazorpayWebhookSignature).mockReturnValue(true);
+    vi.mocked(prisma.subscription.findUnique).mockResolvedValue(null);
+
+    const response = await POST(webhookRequest("subscription.pending"));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ received: true });
+    expect(prisma.subscription.upsert).not.toHaveBeenCalled();
+    expect(findPlanByRazorpayPlanId).not.toHaveBeenCalled();
+  });
+
   it("marks a subscription inactive when Razorpay reports cancellation", async () => {
     vi.mocked(headers).mockResolvedValue(
       new Headers({ "x-razorpay-signature": "sig_good" }),

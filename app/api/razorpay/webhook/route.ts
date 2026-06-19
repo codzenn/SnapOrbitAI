@@ -43,10 +43,16 @@ async function syncSubscription(
   subscription: RazorpaySubscription,
   payment: RazorpayPayment | undefined,
   fallbackStatus?: string,
+  allowCreate = false,
 ) {
   const existing = await prisma.subscription.findUnique({
     where: { razorpaySubscriptionId: subscription.id },
   });
+
+  if (!existing && !allowCreate) {
+    return;
+  }
+
   const config =
     existing
       ? getRazorpayPlan(existing.plan, existing.billingCycle)
@@ -128,7 +134,7 @@ export async function POST(request: Request) {
     const payment = event.payload?.payment?.entity;
 
     if (subscription && ACTIVE_SUBSCRIPTION_EVENTS.has(event.event || "")) {
-      await syncSubscription(subscription, payment);
+      await syncSubscription(subscription, payment, undefined, true);
     }
 
     if (subscription && INACTIVE_SUBSCRIPTION_EVENTS.has(event.event || "")) {

@@ -15,7 +15,6 @@ vi.mock("@/lib/prisma", () => ({
 vi.mock("@/lib/razorpay", () => ({
   createRazorpaySubscription: vi.fn(),
   formatInr: vi.fn(),
-  getPeriodEndDate: vi.fn(),
   getRazorpayPlan: vi.fn(),
 }));
 
@@ -24,7 +23,6 @@ import { prisma } from "@/lib/prisma";
 import {
   createRazorpaySubscription,
   formatInr,
-  getPeriodEndDate,
   getRazorpayPlan,
   type RazorpayPlanConfig,
 } from "@/lib/razorpay";
@@ -46,9 +44,6 @@ describe("POST /api/razorpay/create-subscription", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(formatInr).mockReturnValue("INR 299");
-    vi.mocked(getPeriodEndDate).mockReturnValue(
-      new Date("2026-07-12T00:00:00.000Z"),
-    );
   });
 
   it("returns 401 when unauthenticated", async () => {
@@ -82,7 +77,7 @@ describe("POST /api/razorpay/create-subscription", () => {
     });
   });
 
-  it("creates a Razorpay subscription and stores the pending subscription", async () => {
+  it("creates a Razorpay subscription without mutating the active plan", async () => {
     vi.mocked(auth).mockResolvedValue({ userId: "user_123" } as Awaited<ReturnType<typeof auth>>);
     vi.mocked(getRazorpayPlan).mockReturnValue(proMonthlyConfig);
     vi.mocked(createRazorpaySubscription).mockResolvedValue({
@@ -116,29 +111,6 @@ describe("POST /api/razorpay/create-subscription", () => {
       name: "Pro Monthly",
       description: "SnapOrbitAI Pro plan - monthly subscription",
     });
-    expect(prisma.subscription.upsert).toHaveBeenCalledWith({
-      where: { userId: "user_123" },
-      create: expect.objectContaining({
-        userId: "user_123",
-        provider: "razorpay",
-        razorpayPlanId: "plan_pro_monthly",
-        razorpaySubscriptionId: "sub_123",
-        plan: "pro",
-        billingCycle: "monthly",
-        amount: 29900,
-        currency: "INR",
-        status: "created",
-      }),
-      update: expect.objectContaining({
-        provider: "razorpay",
-        razorpayPlanId: "plan_pro_monthly",
-        razorpaySubscriptionId: "sub_123",
-        plan: "pro",
-        billingCycle: "monthly",
-        amount: 29900,
-        currency: "INR",
-        status: "created",
-      }),
-    });
+    expect(prisma.subscription.upsert).not.toHaveBeenCalled();
   });
 });
