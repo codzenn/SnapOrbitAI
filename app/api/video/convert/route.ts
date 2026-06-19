@@ -102,11 +102,17 @@ export async function POST(request: Request) {
     const normalizedQuality = quality === "auto" ? "auto" : String(quality).trim();
     const normalizedFormat = format === "webm" ? "webm" : "mp4";
     let resultUrl = "";
+    let downloadUrl = "";
 
     if (operation === "compress") {
+      const transformation = `q_${normalizedQuality},f_${normalizedFormat}`;
       resultUrl = getCloudinaryAssetUrl(asset.publicId, {
         resourceType: "video",
-        transformation: `q_${normalizedQuality},f_${normalizedFormat}`,
+        transformation,
+      });
+      downloadUrl = getCloudinaryAssetUrl(asset.publicId, {
+        resourceType: "video",
+        transformation: `${transformation},fl_attachment`,
       });
 
       await prisma.video.update({
@@ -118,9 +124,14 @@ export async function POST(request: Request) {
     }
 
     if (operation === "aspect-ratio") {
+      const transformation = "w_1080,h_1920,c_fill,g_auto,q_auto,f_mp4";
       resultUrl = getCloudinaryAssetUrl(asset.publicId, {
         resourceType: "video",
-        transformation: "w_1080,ar_9:16,c_fill,g_auto,q_auto,f_mp4",
+        transformation,
+      });
+      downloadUrl = getCloudinaryAssetUrl(asset.publicId, {
+        resourceType: "video",
+        transformation: `${transformation},fl_attachment`,
       });
 
       await prisma.video.update({
@@ -142,7 +153,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ url: resultUrl });
+    return NextResponse.json({ url: resultUrl, downloadUrl });
   } catch (error) {
     console.error("[VideoConvert] error:", error);
     return NextResponse.json(

@@ -105,6 +105,51 @@ describe("POST /api/video/analyze", () => {
     expect(videoModel.generateContent).not.toHaveBeenCalled();
   });
 
+  it("bypasses cached analysis when forceRefresh is true", async () => {
+    vi.mocked(auth).mockResolvedValue({ userId: "user_123" } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(prisma.video.findFirst).mockResolvedValue({
+      id: "video_123",
+      videoSummary: "Old cached summary.",
+      videoScenes: analysisPayload.scenes,
+      videoMood: analysisPayload.mood,
+      videoTopics: analysisPayload.topics,
+      videoHasAudio: true,
+      videoTranscript: analysisPayload.keyQuotes.join(" | "),
+    } as unknown as Awaited<ReturnType<typeof prisma.video.findFirst>>);
+    vi.mocked(getFeatureAccess).mockResolvedValue({
+      allowed: true,
+      plan: "pro",
+      remainingUses: null,
+    });
+    vi.mocked(buildVideoPart).mockResolvedValue({
+      inlineData: { mimeType: "video/mp4", data: "base64-data" },
+    });
+    vi.mocked(videoModel.generateContent).mockResolvedValue({
+      response: {
+        text: () => JSON.stringify(analysisPayload),
+      },
+    } as Awaited<ReturnType<typeof videoModel.generateContent>>);
+
+    const response = await POST(
+      new Request("http://localhost/api/video/analyze", {
+        method: "POST",
+        body: JSON.stringify({
+          videoId: "video_123",
+          videoUrl: "https://example.com/video.mp4",
+          forceRefresh: true,
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual(analysisPayload);
+    expect(buildVideoPart).toHaveBeenCalledWith(
+      "https://example.com/video.mp4",
+      "video/mp4",
+    );
+    expect(videoModel.generateContent).toHaveBeenCalled();
+  });
+
   it("returns 403 when the free analysis trial is exhausted", async () => {
     vi.mocked(auth).mockResolvedValue({ userId: "user_123" } as Awaited<ReturnType<typeof auth>>);
     vi.mocked(getFeatureAccess).mockResolvedValue({

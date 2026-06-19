@@ -94,6 +94,7 @@ export default function VideoAnalysisPanel({
           videoUrl,
           videoId,
           mimeType,
+          forceRefresh,
         }),
       });
       const data = await response.json();
@@ -251,7 +252,7 @@ export default function VideoAnalysisPanel({
               <div className="mt-3 space-y-2">
                 {analysis.keyQuotes.map((quote) => (
                   <p key={quote} className="text-sm italic leading-6 text-neutral-300">
-                    "{quote}"
+                    &ldquo;{quote}&rdquo;
                   </p>
                 ))}
               </div>

@@ -14,6 +14,13 @@ interface VideoConverterPanelProps {
   originalSizeBytes?: number;
 }
 
+interface VideoConversionResponse {
+  url?: string;
+  downloadUrl?: string;
+  message?: string;
+  error?: string;
+}
+
 async function getRemoteFileSize(url: string) {
   try {
     const response = await fetch(url, { method: "HEAD" });
@@ -22,6 +29,25 @@ async function getRemoteFileSize(url: string) {
   } catch {
     return null;
   }
+}
+
+async function downloadRemoteFile(url: string, filename: string) {
+  const response = await fetch(url, { cache: "no-store" });
+
+  if (!response.ok) {
+    throw new Error("Download failed.");
+  }
+
+  const blob = await response.blob();
+  const objectUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = objectUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(objectUrl);
 }
 
 export default function VideoConverterPanel({
@@ -36,9 +62,11 @@ export default function VideoConverterPanel({
   const [format, setFormat] = useState<"mp4" | "webm">("mp4");
   const [quality, setQuality] = useState<"auto" | "80" | "60" | "40">("auto");
   const [compressedUrl, setCompressedUrl] = useState<string | null>(null);
+  const [compressedDownloadUrl, setCompressedDownloadUrl] = useState<string | null>(null);
   const [compressedSizeBytes, setCompressedSizeBytes] = useState<number | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
   const [portraitUrl, setPortraitUrl] = useState<string | null>(null);
+  const [portraitDownloadUrl, setPortraitDownloadUrl] = useState<string | null>(null);
   const [isConverting, setIsConverting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isTrialLocked, setIsTrialLocked] = useState(false);
@@ -57,6 +85,7 @@ export default function VideoConverterPanel({
     setIsCompressing(true);
     setError(null);
     setCompressedUrl(null);
+    setCompressedDownloadUrl(null);
     setCompressedSizeBytes(null);
 
     try {
@@ -73,13 +102,18 @@ export default function VideoConverterPanel({
           quality,
         }),
       });
-      const data = await response.json();
+      const data = (await response.json()) as VideoConversionResponse;
 
       if (!response.ok) {
         throw new Error(data.message || data.error || "Compression failed.");
       }
 
+      if (!data.url) {
+        throw new Error("Compression finished without a playable video URL.");
+      }
+
       setCompressedUrl(data.url);
+      setCompressedDownloadUrl(data.downloadUrl ?? data.url);
       setCompressedSizeBytes(await getRemoteFileSize(data.url));
     } catch (compressionError) {
       setError(
@@ -97,6 +131,7 @@ export default function VideoConverterPanel({
     setError(null);
     setIsTrialLocked(false);
     setPortraitUrl(null);
+    setPortraitDownloadUrl(null);
 
     try {
       const response = await fetch("/api/video/convert", {
@@ -110,7 +145,7 @@ export default function VideoConverterPanel({
           operation: "aspect-ratio",
         }),
       });
-      const data = await response.json();
+      const data = (await response.json()) as VideoConversionResponse;
 
       if (!response.ok) {
         if (data.error === "TRIAL_EXHAUSTED" || data.error === "PLAN_LIMIT_REACHED") {
@@ -122,7 +157,12 @@ export default function VideoConverterPanel({
         throw new Error(data.message || data.error || "Aspect ratio conversion failed.");
       }
 
+      if (!data.url) {
+        throw new Error("Conversion finished without a playable video URL.");
+      }
+
       setPortraitUrl(data.url);
+      setPortraitDownloadUrl(data.downloadUrl ?? data.url);
     } catch (conversionError) {
       setError(
         conversionError instanceof Error
@@ -131,6 +171,16 @@ export default function VideoConverterPanel({
       );
     } finally {
       setIsConverting(false);
+    }
+  };
+
+  const handleDownload = async (url: string, filename: string) => {
+    setError(null);
+
+    try {
+      await downloadRemoteFile(url, filename);
+    } catch {
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -184,10 +234,15 @@ export default function VideoConverterPanel({
                   <select
                     value={format}
                     onChange={(event) => setFormat(event.target.value as "mp4" | "webm")}
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none"
+                    className="w-full rounded-xl border border-white/10 bg-zinc-950 px-3 py-2 text-white outline-none"
+                    style={{ colorScheme: "dark" }}
                   >
-                    <option value="mp4">MP4</option>
-                    <option value="webm">WebM</option>
+                    <option value="mp4" className="bg-zinc-950 text-white">
+                      MP4
+                    </option>
+                    <option value="webm" className="bg-zinc-950 text-white">
+                      WebM
+                    </option>
                   </select>
                 </label>
                 <label className="space-y-2 text-sm text-neutral-300">
@@ -197,12 +252,21 @@ export default function VideoConverterPanel({
                     onChange={(event) =>
                       setQuality(event.target.value as "auto" | "80" | "60" | "40")
                     }
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none"
+                    className="w-full rounded-xl border border-white/10 bg-zinc-950 px-3 py-2 text-white outline-none"
+                    style={{ colorScheme: "dark" }}
                   >
-                    <option value="auto">Auto</option>
-                    <option value="80">High</option>
-                    <option value="60">Medium</option>
-                    <option value="40">Low</option>
+                    <option value="auto" className="bg-zinc-950 text-white">
+                      Auto
+                    </option>
+                    <option value="80" className="bg-zinc-950 text-white">
+                      High
+                    </option>
+                    <option value="60" className="bg-zinc-950 text-white">
+                      Medium
+                    </option>
+                    <option value="40" className="bg-zinc-950 text-white">
+                      Low
+                    </option>
                   </select>
                 </label>
               </div>
@@ -240,11 +304,18 @@ export default function VideoConverterPanel({
                       ) : null}
                     </div>
                   </div>
-                  <Button asChild className="bg-white text-black hover:bg-neutral-200">
-                    <a href={compressedUrl} target="_blank" rel="noreferrer">
-                      <Download className="mr-2 size-4" />
-                      Download compressed video
-                    </a>
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      void handleDownload(
+                        compressedDownloadUrl ?? compressedUrl,
+                        `snaporbit-compressed.${format}`,
+                      )
+                    }
+                    className="bg-white text-black hover:bg-neutral-200"
+                  >
+                    <Download className="mr-2 size-4" />
+                    Download compressed video
                   </Button>
                 </div>
               ) : null}
@@ -280,11 +351,18 @@ export default function VideoConverterPanel({
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-3">
-                    <Button asChild className="bg-white text-black hover:bg-neutral-200">
-                      <a href={portraitUrl} target="_blank" rel="noreferrer">
-                        <Download className="mr-2 size-4" />
-                        Download portrait video
-                      </a>
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        void handleDownload(
+                          portraitDownloadUrl ?? portraitUrl,
+                          "snaporbit-portrait.mp4",
+                        )
+                      }
+                      className="bg-white text-black hover:bg-neutral-200"
+                    >
+                      <Download className="mr-2 size-4" />
+                      Download portrait video
                     </Button>
                     <Button
                       type="button"

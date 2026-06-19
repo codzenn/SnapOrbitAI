@@ -85,7 +85,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { videoUrl, videoId, mimeType = "video/mp4" } = await request.json();
+    const {
+      videoUrl,
+      videoId,
+      mimeType = "video/mp4",
+      forceRefresh = false,
+    } = await request.json();
 
     if (!videoUrl) {
       return NextResponse.json(
@@ -128,7 +133,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Video not found" }, { status: 404 });
       }
 
-      const cached = getCachedAnalysis(asset);
+      const cached = forceRefresh === true ? null : getCachedAnalysis(asset);
       if (cached) {
         return NextResponse.json(cached);
       }

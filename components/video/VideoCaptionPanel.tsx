@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import UpgradeModal from "@/components/ui/UpgradeModal";
 
 type CaptionTab = "instagram" | "linkedin" | "twitter";
+type AppPlan = "free" | "pro" | "business";
 
 interface VideoCaptionPayload {
   instagram: string;
@@ -40,6 +41,7 @@ export default function VideoCaptionPanel({
 }: VideoCaptionPanelProps) {
   const [activeTab, setActiveTab] = useState<CaptionTab>("instagram");
   const [captions, setCaptions] = useState<VideoCaptionPayload | null>(null);
+  const [currentPlan, setCurrentPlan] = useState<AppPlan>("free");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isTrialLocked, setIsTrialLocked] = useState(false);
@@ -62,11 +64,39 @@ export default function VideoCaptionPanel({
     () => captions?.[activeTab] ?? "",
     [activeTab, captions],
   );
+  const canRefreshCaptions = currentPlan !== "free";
 
-  const loadCaptions = useCallback(async () => {
+  useEffect(() => {
+    let isMounted = true;
+
+    fetch("/api/subscription/current")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { plan?: AppPlan } | null) => {
+        if (!isMounted || !data?.plan) {
+          return;
+        }
+
+        setCurrentPlan(data.plan);
+      })
+      .catch(() => {
+        if (isMounted) {
+          setCurrentPlan("free");
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const loadCaptions = useCallback(async (forceRefresh = false) => {
     setIsLoading(true);
     setError(null);
     setIsTrialLocked(false);
+
+    if (forceRefresh) {
+      setCaptions(null);
+    }
 
     try {
       const response = await fetch("/api/video/captions", {
@@ -78,12 +108,13 @@ export default function VideoCaptionPanel({
           videoUrl,
           videoId,
           mimeType,
+          forceRefresh,
         }),
       });
       const data = await response.json();
 
       if (!response.ok) {
-        if (data.error === "TRIAL_EXHAUSTED") {
+        if (data.error === "TRIAL_EXHAUSTED" || data.error === "PAID_PLAN_REQUIRED") {
           setIsTrialLocked(true);
           return;
         }
@@ -275,15 +306,17 @@ export default function VideoCaptionPanel({
             })}
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => void loadCaptions()}
-            className="border-white/15 bg-transparent text-white hover:bg-white/10"
-          >
-            <RefreshCcw className="mr-2 size-4" />
-            Refresh captions
-          </Button>
+          {canRefreshCaptions ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void loadCaptions(true)}
+              className="border-white/15 bg-transparent text-white hover:bg-white/10"
+            >
+              <RefreshCcw className="mr-2 size-4" />
+              Refresh captions
+            </Button>
+          ) : null}
         </CardContent>
       </Card>
 

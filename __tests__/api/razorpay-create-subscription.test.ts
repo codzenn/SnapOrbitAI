@@ -38,7 +38,7 @@ const proMonthlyConfig: RazorpayPlanConfig = {
   amount: 29900,
   currency: "INR",
   periodMonths: 1,
-  totalCount: 1200,
+  totalCount: 120,
   envKey: "RAZORPAY_PRO_MONTHLY_PLAN_ID",
 };
 

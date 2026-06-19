@@ -52,7 +52,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { videoUrl, videoId, mimeType = "video/mp4" } = await request.json();
+    const {
+      videoUrl,
+      videoId,
+      mimeType = "video/mp4",
+      forceRefresh = false,
+    } = await request.json();
 
     if (!videoUrl) {
       return NextResponse.json(
@@ -77,12 +82,23 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Video not found" }, { status: 404 });
       }
 
-      if (asset.videoCaptions) {
+      if (asset.videoCaptions && forceRefresh !== true) {
         return NextResponse.json(asset.videoCaptions);
       }
     }
 
     const access = await getFeatureAccess(userId, "video-captions");
+    if (forceRefresh === true && access.plan === "free") {
+      return NextResponse.json(
+        {
+          error: "PAID_PLAN_REQUIRED",
+          feature: "video-captions",
+          message: "Refreshing video captions is available on paid plans.",
+        },
+        { status: 403 },
+      );
+    }
+
     if (!access.allowed) {
       return NextResponse.json(
         { error: "TRIAL_EXHAUSTED", feature: "video-captions" },

@@ -62,9 +62,11 @@ describe("POST /api/video/convert", () => {
       id: "video_123",
       publicId: "video/public-id",
     } as unknown as Awaited<ReturnType<typeof prisma.video.findFirst>>);
-    vi.mocked(getCloudinaryAssetUrl).mockReturnValue(
-      "https://cdn.snaporbit.test/video/public-id/compressed.mp4",
-    );
+    vi.mocked(getCloudinaryAssetUrl)
+      .mockReturnValueOnce("https://cdn.snaporbit.test/video/public-id/compressed.mp4")
+      .mockReturnValueOnce(
+        "https://cdn.snaporbit.test/video/public-id/compressed-download.mp4",
+      );
 
     const response = await POST(
       new Request("http://localhost/api/video/convert", {
@@ -82,6 +84,7 @@ describe("POST /api/video/convert", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
       url: "https://cdn.snaporbit.test/video/public-id/compressed.mp4",
+      downloadUrl: "https://cdn.snaporbit.test/video/public-id/compressed-download.mp4",
     });
     expect(prisma.video.update).toHaveBeenCalledWith({
       where: { id: "video_123" },
@@ -163,9 +166,11 @@ describe("POST /api/video/convert", () => {
       plan: "free",
       remainingUses: 1,
     });
-    vi.mocked(getCloudinaryAssetUrl).mockReturnValue(
-      "https://cdn.snaporbit.test/video/public-id/portrait.mp4",
-    );
+    vi.mocked(getCloudinaryAssetUrl)
+      .mockReturnValueOnce("https://cdn.snaporbit.test/video/public-id/portrait.mp4")
+      .mockReturnValueOnce(
+        "https://cdn.snaporbit.test/video/public-id/portrait-download.mp4",
+      );
 
     const response = await POST(
       new Request("http://localhost/api/video/convert", {
@@ -181,6 +186,7 @@ describe("POST /api/video/convert", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
       url: "https://cdn.snaporbit.test/video/public-id/portrait.mp4",
+      downloadUrl: "https://cdn.snaporbit.test/video/public-id/portrait-download.mp4",
     });
     expect(prisma.video.update).toHaveBeenCalledWith({
       where: { id: "video_123" },

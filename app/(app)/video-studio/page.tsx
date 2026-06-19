@@ -207,13 +207,22 @@ export default function VideoStudioPage() {
             className="space-y-4"
           >
             <TabsList className="grid w-full grid-cols-3 bg-white/5">
-              <TabsTrigger value="analyze" className="text-white data-active:text-black">
+              <TabsTrigger
+                value="analyze"
+                className="text-neutral-300 data-active:bg-white/15 data-active:text-white hover:text-white dark:data-active:bg-white/15 dark:data-active:text-white"
+              >
                 Analyze
               </TabsTrigger>
-              <TabsTrigger value="captions" className="text-white data-active:text-black">
+              <TabsTrigger
+                value="captions"
+                className="text-neutral-300 data-active:bg-white/15 data-active:text-white hover:text-white dark:data-active:bg-white/15 dark:data-active:text-white"
+              >
                 Captions
               </TabsTrigger>
-              <TabsTrigger value="convert" className="text-white data-active:text-black">
+              <TabsTrigger
+                value="convert"
+                className="text-neutral-300 data-active:bg-white/15 data-active:text-white hover:text-white dark:data-active:bg-white/15 dark:data-active:text-white"
+              >
                 Convert
               </TabsTrigger>
             </TabsList>
